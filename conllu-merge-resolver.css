@@ -9,5 +9,9 @@
 
 .conflict-solved {
     color: white;
-    background-color: green;
+    background: green;
+}
+
+#text-word {
+    font-weight: bold;
 }
