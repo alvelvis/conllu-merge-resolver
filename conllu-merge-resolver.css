@@ -1,0 +1,13 @@
+.conflict {
+    background-color: blue;
+    color: white;
+}
+
+.text-view {
+    font-family: 'Courier New', Courier, monospace
+}
+
+.conflict-solved {
+    color: white;
+    background-color: green;
+}
