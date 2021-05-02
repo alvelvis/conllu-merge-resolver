@@ -4,12 +4,17 @@
 }
 
 .text-view {
-    font-family: 'Courier New', Courier, monospace
+    font-family: 'Courier New', Courier, monospace;
 }
 
 .conflict-solved {
     color: white;
     background: green;
+}
+
+.solved {
+    color: white;
+    background-color: green;
 }
 
 #text-word {
