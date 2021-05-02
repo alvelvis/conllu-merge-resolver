@@ -62,7 +62,7 @@ def count_conflicts(query):
             tokens_query[result['resultadoEstruturado'].sent_id] = []
             for token in result['resultadoAnotado'].tokens:
                 if "@BOLD" in token.to_str():
-                    tokens_query[result['resultadoEstruturado'].sent_id].append(token.id.split("/")[1])
+                    tokens_query[result['resultadoEstruturado'].sent_id].append((token.id.split("/")[1] if '/' in token.id else token.id).replace("@BOLD", ""))
     window.conflicts = []
     window.conflicts_i = {}
     window.conflicts_l = {}
