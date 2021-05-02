@@ -80,12 +80,12 @@ def count_conflicts(query):
             incoming = {}
             for l, line in enumerate(window.corpus[i].splitlines()):
                 if line.split("\t")[0] in tokens_query[sent_id]:
-                    incoming[line.split("\t")[0]] = (l, line)
+                    head[line.split("\t")[0]] = (l, line)
             for l, line in enumerate(challenger.splitlines()):
                 if line.split("\t")[0] in tokens_query[sent_id]:
-                    head[line.split("\t")[0]] = (l, line)
+                    incoming[line.split("\t")[0]] = (l, line)
             for token_id in incoming:
-                if token_id in head and any(head[token_id][1].split("\t")[x] != incoming[token_id][1].split("\t")[x] for x in [cols.split().index(y) for y in ['lemma', 'upos', 'feats', 'deprel', 'deps', 'dephead']]):
+                if token_id in head and any(head[token_id][1].split("\t")[x] != incoming[token_id][1].split("\t")[x] for x in [cols.split().index(y) for y in cols.split()]):
                     conflict = {}
                     conflict['incoming_branch'] = ""
                     conflict['incoming'] = incoming[token_id][1]
@@ -110,7 +110,7 @@ def count_conflicts(query):
                     continue
                 if line.startswith(">>>>>>>"):
                     inside_incoming = False
-                    if len(head) == len(incoming) and all(len(x.split("\t")) == 10 for x in head + incoming):
+                    if all(len(x.split("\t")) == 10 for x in head + incoming) and [x.split("\t")[1] for x in head] == [x.split("\t")[1] for x in incoming]:
                         incoming_branch = line.split(">>>>>>>")[1].split()[0].strip()
                         conflict = {}
                         conflict['incoming_branch'] = incoming_branch
@@ -131,6 +131,7 @@ def count_conflicts(query):
                 if inside_incoming:
                     incoming.append(line)
     objects['unsolvable_conflicts'].set_text("{} unsolvable conflicts".format(bad_conflicts))
+
     objects['conflicts'].set_text("{} conflicts".format(len(window.conflicts)))
 
 def goto_conflict(n):
@@ -138,15 +139,16 @@ def goto_conflict(n):
     objects['this_conflict'].set_text("Now: {}".format(n+1))
     if objects['sentence'].get_text(objects['sentence'].get_start_iter(), objects['sentence'].get_end_iter(), True) != window.corpus[window.conflicts_i[n]]:
         objects['sentence'].set_text(window.corpus[window.conflicts_i[n]])
-    objects['token_in_conflict'].set_text(window.conflicts[n]['incoming'] if not n in window.solved else window.solved[n])
+    objects['token_in_conflict'].set_text(window.conflicts[n]['head'] if not n in window.solved else window.solved[n])
     text_word_id = window.conflicts[n]['incoming'].split("\t")[0]
     text_word = window.conflicts[n]['incoming'].split("\t")[1]
-    text_left = [y for x, y in window.tokens[window.conflicts_i[n]].items() if not '-' in x and int(x) < int(text_word_id)]
-    text_right = [y for x, y in window.tokens[window.conflicts_i[n]].items() if not '-' in x and int(x) > int(text_word_id)]
+    text_left = [y for x, y in window.tokens[window.conflicts_i[n]].items() if not '-' in x and int(x) < int(text_word_id)] if not '-' in text_word_id else ""
+    text_right = [y for x, y in window.tokens[window.conflicts_i[n]].items() if not '-' in x and int(x) > int(text_word_id)] if not '-' in text_word_id else ""
     objects['text_word'].set_text(text_word)
     objects['text_left'].set_text(" ".join(text_left))
     objects['text_right'].set_text(" ".join(text_right))
-    objects['incoming_branch'].set_text(window.conflicts[n]['incoming_branch'])
+    if window.kind == "git":
+        objects['filename2'].set_text(window.conflicts[n]['incoming_branch'])
     if n in window.solved:
         objects['token_in_conflict'].get_style_context().add_class("conflict-solved")
     else:
@@ -154,12 +156,13 @@ def goto_conflict(n):
     for i, col in enumerate(cols.split()):
         objects['left_{}'.format(col)].set_label(window.conflicts[n]['head'].split("\t")[i])
         objects['right_{}'.format(col)].set_label(window.conflicts[n]['incoming'].split("\t")[i])
+        objects['left_{}'.format(col)].get_style_context().remove_class("conflict")
+        objects['right_{}'.format(col)].get_style_context().remove_class("conflict")
+        objects['left_{}'.format(col)].get_style_context().remove_class("solved")
+        objects['right_{}'.format(col)].get_style_context().remove_class("solved")
         if window.conflicts[n]['head'].split("\t")[i] != window.conflicts[n]['incoming'].split("\t")[i]:
-            objects['left_{}'.format(col)].get_style_context().add_class("conflict")
             objects['right_{}'.format(col)].get_style_context().add_class("conflict")
-        else:
-            objects['left_{}'.format(col)].get_style_context().remove_class("conflict")
-            objects['right_{}'.format(col)].get_style_context().remove_class("conflict")
+            objects['left_{}'.format(col)].get_style_context().add_class("conflict")
     objects['left_label'].set_text('dephead ({})'.format(window.tokens[window.conflicts_i[n]].get(window.conflicts[n]['head'].split("\t")[6], "None")))
     objects['right_label'].set_text('({}) dephead'.format(window.tokens[window.conflicts_i[n]].get(window.conflicts[n]['incoming'].split("\t")[6], "None")))
 
@@ -177,7 +180,7 @@ def click_button(btn):
         show_dialog_close("First, pick the file you want to edit.")
         win = FileChooserWindow()
         if win.filename:
-            show_dialog_close("Second, pick the file to which you are comparing \"{}\".".format(win.filename))
+            show_dialog_close("Second, pick the file to which you are comparing it.")
             win2 = FileChooserWindow()
             if win.filename and win2.filename:
                 show_dialog_close("Finally, type the query to find tokens in the center of the confusion.", True)
@@ -196,18 +199,6 @@ def click_button(btn):
         save_token_in_conflict()
         if window.this_conflict:
             goto_conflict(window.this_conflict -1)
-        return
-
-    if button == "copy_from_left":
-        for col in cols.split():
-            change_col(objects["left_{}".format(col)])
-        click_button(objects['next_conflict'])
-        return
-
-    if button == "copy_from_right":
-        for col in cols.split():
-            change_col(objects["right_{}".format(col)])
-        click_button(objects['next_conflict'])
         return
 
     if button == "save_changes":
@@ -230,10 +221,12 @@ def click_button(btn):
         exit()
 
 def save_token_in_conflict(btn=None):
-    if objects['token_in_conflict'].get_text().strip():
+    if objects['token_in_conflict'].get_text().strip() and len(objects['token_in_conflict'].get_text().strip().split("\t")) == 10:
         window.solved[window.this_conflict] = objects['token_in_conflict'].get_text()
         objects['token_in_conflict'].get_style_context().add_class("conflict-solved")
         objects['solved_conflicts'].set_text("{} solved conflicts".format(len(window.solved)))
+    else:
+        show_dialog_close("Conflict not solved.")
     sentence_text = objects['sentence'].get_text(objects['sentence'].get_start_iter(), objects['sentence'].get_end_iter(), True).strip()
     if sentence_text:
         window.corpus[window.conflicts_i[window.this_conflict]] = sentence_text
@@ -283,7 +276,7 @@ provider = Gtk.CssProvider()
 provider.load_from_path("conllu-merge-resolver.css")
 Gtk.StyleContext.add_provider_for_screen(screen, provider, Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION)
 
-buttons = "filename filename2 text_word text_left text_right open_git_file open_confusion next_conflict previous_conflict copy_from_left copy_from_right token_in_conflict save_changes filename conflicts this_conflict solved_conflicts unsolvable_conflicts sentence left_label right_label incoming_branch"
+buttons = "filename filename2 text_word text_left text_right open_git_file open_confusion next_conflict previous_conflict token_in_conflict save_changes filename conflicts this_conflict solved_conflicts unsolvable_conflicts sentence left_label right_label"
 cols = "id word lemma upos xpos feats dephead deprel deps misc"
 
 objects = {
