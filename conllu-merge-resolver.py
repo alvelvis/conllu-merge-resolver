@@ -213,12 +213,21 @@ def click_button(btn):
                 del sentence[start:end+1]
                 for n in reversed(window.conflicts_l[l]):
                     sentence.insert(start, window.solved[n])
+                    saved += 1
                 window.corpus[i] = "\n".join(sentence)
-                saved += 1
         with open(window.filename, "w") as f:
             f.write("\n\n".join(window.corpus))
         show_dialog_close("{} conflicts were fixed and saved to \"{}\".".format(saved, window.filename))
         exit()
+
+    if button == "skip":
+        if window.this_conflict in window.solved:
+            del window.solved[window.this_conflict]
+        if len(window.conflicts) -1 > window.this_conflict:
+            goto_conflict(window.this_conflict+1)
+        else:
+            goto_conflict(window.this_conflict)
+        return
 
 def save_token_in_conflict(btn=None):
     if objects['token_in_conflict'].get_text().strip() and len(objects['token_in_conflict'].get_text().strip().split("\t")) == 10:
@@ -233,10 +242,15 @@ def save_token_in_conflict(btn=None):
 
 def change_col(btn):
     col = Gtk.Buildable.get_name(btn).split("_")[1]
+    direction = Gtk.Buildable.get_name(btn).split("_")[0]
     c = cols.split().index(col)
     token_in_conflict = objects['token_in_conflict'].get_text().split("\t")
     token_in_conflict[c] = btn.get_label()
     objects['token_in_conflict'].set_text("\t".join(token_in_conflict))
+    objects['{}_{}'.format(direction, col)].get_style_context().add_class("solved")
+    objects['{}_{}'.format(direction, col)].get_style_context().remove_class("conflict")
+    objects['{}_{}'.format('left' if direction == 'right' else 'right', col)].get_style_context().remove_class("solved")
+    objects['{}_{}'.format('left' if direction == 'right' else 'right', col)].get_style_context().add_class("conflict")
     save_token_in_conflict()
     return
 
@@ -276,7 +290,7 @@ provider = Gtk.CssProvider()
 provider.load_from_path("conllu-merge-resolver.css")
 Gtk.StyleContext.add_provider_for_screen(screen, provider, Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION)
 
-buttons = "filename filename2 text_word text_left text_right open_git_file open_confusion next_conflict previous_conflict token_in_conflict save_changes filename conflicts this_conflict solved_conflicts unsolvable_conflicts sentence left_label right_label"
+buttons = "skip filename filename2 text_word text_left text_right open_git_file open_confusion next_conflict previous_conflict token_in_conflict save_changes filename conflicts this_conflict solved_conflicts unsolvable_conflicts sentence left_label right_label"
 cols = "id word lemma upos xpos feats dephead deprel deps misc"
 
 objects = {
