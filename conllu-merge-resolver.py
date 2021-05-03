@@ -213,8 +213,8 @@ def click_button(btn):
                 del sentence[start:end+1]
                 for n in reversed(window.conflicts_l[l]):
                     sentence.insert(start, window.solved[n])
+                    saved += 1
                 window.corpus[i] = "\n".join(sentence)
-                saved += 1
         with open(window.filename, "w") as f:
             f.write("\n\n".join(window.corpus))
         show_dialog_close("{} conflicts were fixed and saved to \"{}\".".format(saved, window.filename))
@@ -225,6 +225,8 @@ def click_button(btn):
             del window.solved[window.this_conflict]
         if len(window.conflicts) -1 > window.this_conflict:
             goto_conflict(window.this_conflict+1)
+        else:
+            goto_conflict(window.this_conflict)
         return
 
 def save_token_in_conflict(btn=None):
