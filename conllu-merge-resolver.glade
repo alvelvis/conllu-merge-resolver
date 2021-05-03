@@ -6,7 +6,7 @@
   <object class="GtkTextBuffer" id="sentence"/>
   <object class="GtkWindow" id="window1">
     <property name="can_focus">False</property>
-    <property name="title" translatable="yes">CoNLL-U Merge Resolver</property>
+    <property name="title" translatable="yes">CoSMO - CoNLL-U Simple Merge Observer</property>
     <child type="titlebar">
       <placeholder/>
     </child>
@@ -131,6 +131,7 @@
                 <property name="app_paintable">True</property>
                 <property name="can_focus">True</property>
                 <property name="tooltip_text" translatable="yes">DO NOT edit the line in conflict in this window; instead, use the solution box below. Other modifications are allowed.</property>
+                <property name="wrap_mode">word</property>
                 <property name="buffer">sentence</property>
                 <property name="monospace">True</property>
                 <style>
@@ -250,6 +251,8 @@
                 <property name="visible">True</property>
                 <property name="can_focus">False</property>
                 <property name="halign">start</property>
+                <property name="margin_left">10</property>
+                <property name="margin_right">10</property>
                 <property name="label" translatable="yes">label</property>
                 <property name="ellipsize">end</property>
                 <property name="single_line_mode">True</property>
@@ -305,14 +308,15 @@
               <object class="GtkGrid">
                 <property name="visible">True</property>
                 <property name="can_focus">False</property>
+                <property name="column_homogeneous">True</property>
                 <child>
                   <object class="GtkButton" id="skip">
                     <property name="label" translatable="yes">Skip</property>
                     <property name="visible">True</property>
                     <property name="can_focus">True</property>
                     <property name="receives_default">True</property>
-                    <property name="tooltip_text" translatable="yes">Skip this conflict</property>
-                    <property name="relief">none</property>
+                    <property name="tooltip_text" translatable="yes">Leave conflict unsolved</property>
+                    <property name="margin_left">10</property>
                   </object>
                   <packing>
                     <property name="left_attach">0</property>
@@ -340,7 +344,7 @@
             <property name="expand">False</property>
             <property name="fill">True</property>
             <property name="padding">5</property>
-            <property name="position">8</property>
+            <property name="position">6</property>
           </packing>
         </child>
         <child>
