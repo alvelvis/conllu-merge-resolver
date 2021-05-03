@@ -223,6 +223,7 @@ def click_button(btn):
     if button == "skip":
         if window.this_conflict in window.solved:
             del window.solved[window.this_conflict]
+            objects['solved_conflicts'].set_text("{} solved conflicts".format(len(window.solved)))
         if len(window.conflicts) -1 > window.this_conflict:
             goto_conflict(window.this_conflict+1)
         else:
