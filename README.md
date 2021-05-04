@@ -10,4 +10,6 @@ See [releases](https://github.com/alvelvis/conllu-merge-resolver/releases).
 
 ## Distributing
 
-`pyinstaller cosmo.py --add-data "conllu-merge-resolver.css;." --add-data "conllu-merge-resolver.glade;." --add-data "estrutura_ud.py;." --add-data "interrogar_UD.py;."``
+```
+pyinstaller cosmo.py --add-data "conllu-merge-resolver.css;." --add-data "conllu-merge-resolver.glade;." --add-data "estrutura_ud.py;." --add-data "interrogar_UD.py;."
+```
