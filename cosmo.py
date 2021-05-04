@@ -150,9 +150,9 @@ def goto_conflict(n):
     if window.kind == "git":
         objects['filename2'].set_text(window.conflicts[n]['incoming_branch'])
     if n in window.solved:
-        objects['token_in_conflict'].get_style_context().add_class("conflict-solved")
+        objects['token_in_conflict'].get_style_context().add_class("solved")
     else:
-        objects['token_in_conflict'].get_style_context().remove_class("conflict-solved")
+        objects['token_in_conflict'].get_style_context().remove_class("solved")
     for i, col in enumerate(cols.split()):
         objects['left_{}'.format(col)].set_label(window.conflicts[n]['head'].split("\t")[i])
         objects['right_{}'.format(col)].set_label(window.conflicts[n]['incoming'].split("\t")[i])
@@ -190,13 +190,11 @@ def click_button(btn):
         return
 
     if button == "next_conflict":
-        save_token_in_conflict()
         if len(window.conflicts) -1 > window.this_conflict:
             goto_conflict(window.this_conflict +1)
         return
 
     if button == "previous_conflict":
-        save_token_in_conflict()
         if window.this_conflict:
             goto_conflict(window.this_conflict -1)
         return
@@ -230,16 +228,28 @@ def click_button(btn):
             goto_conflict(window.this_conflict)
         return
 
+    if button == "save_conflict":
+        save_token_in_conflict()
+        return
+
+    if button == "next_unsolved":
+        for n in range(len(window.conflicts)):
+            if not n in window.solved:
+                goto_conflict(n)
+                break
+        return
+
 def save_token_in_conflict(btn=None):
     if objects['token_in_conflict'].get_text().strip() and len(objects['token_in_conflict'].get_text().strip().split("\t")) == 10:
         window.solved[window.this_conflict] = objects['token_in_conflict'].get_text()
-        objects['token_in_conflict'].get_style_context().add_class("conflict-solved")
+        objects['token_in_conflict'].get_style_context().add_class("solved")
         objects['solved_conflicts'].set_text("{} solved conflicts".format(len(window.solved)))
     else:
         show_dialog_close("Conflict not solved.")
     sentence_text = objects['sentence'].get_text(objects['sentence'].get_start_iter(), objects['sentence'].get_end_iter(), True).strip()
     if sentence_text:
         window.corpus[window.conflicts_i[window.this_conflict]] = sentence_text
+    click_button(objects['next_conflict'])
 
 def change_col(btn):
     col = Gtk.Buildable.get_name(btn).split("_")[1]
@@ -252,7 +262,6 @@ def change_col(btn):
     objects['{}_{}'.format(direction, col)].get_style_context().remove_class("conflict")
     objects['{}_{}'.format('left' if direction == 'right' else 'right', col)].get_style_context().remove_class("solved")
     objects['{}_{}'.format('left' if direction == 'right' else 'right', col)].get_style_context().add_class("conflict")
-    save_token_in_conflict()
     return
 
 class FileChooserWindow(Gtk.Window):
@@ -291,7 +300,7 @@ provider = Gtk.CssProvider()
 provider.load_from_path("conllu-merge-resolver.css")
 Gtk.StyleContext.add_provider_for_screen(screen, provider, Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION)
 
-buttons = "skip filename filename2 text_word text_left text_right open_git_file open_confusion next_conflict previous_conflict token_in_conflict save_changes filename conflicts this_conflict solved_conflicts unsolvable_conflicts sentence left_label right_label"
+buttons = "next_unsolved save_conflict skip filename filename2 text_word text_left text_right open_git_file open_confusion next_conflict previous_conflict token_in_conflict save_changes filename conflicts this_conflict solved_conflicts unsolvable_conflicts sentence left_label right_label"
 cols = "id word lemma upos xpos feats dephead deprel deps misc"
 
 objects = {
