@@ -48,7 +48,7 @@ def load_file(kind, file, file2="", query=""):
     count_conflicts(query=query)
     if not window.conflicts:
         show_dialog_ok("No conflicts were found.")
-        exit()
+        sys.exit()
     goto_conflict(0)
 
 def count_conflicts(query):
@@ -214,15 +214,18 @@ def click_button(btn):
     if button == "next_conflict":
         if len(window.conflicts) -1 > window.this_conflict:
             goto_conflict(window.this_conflict +1)
+        else:
+            goto_conflict(window.this_conflict)
         return
 
     if button == "previous_conflict":
         if window.this_conflict:
             goto_conflict(window.this_conflict -1)
+        else:
+            goto_conflict(window.this_conflict)
         return
 
     if button == "save_changes":
-        save_token_in_conflict()
         saved = 0
         for l in sorted(window.conflicts_l, key=lambda x: (x[0], -x[1])):
             if all(n in window.solved for n in window.conflicts_l[l]):
@@ -235,10 +238,19 @@ def click_button(btn):
                     sentence.insert(start, window.solved[n])
                     saved += 1
                 window.corpus[i] = "\n".join(sentence)
+                if window.kind == "confusion":
+                    sentence = window.corpus2[i].splitlines()
+                    del sentence[start:end+1]
+                    for n in reversed(window.conflicts_l[l]):
+                        sentence.insert(start, window.solved[n])
+                    window.corpus2[i] = "\n".join(sentence)
         with open(window.filename, "w", encoding="utf-8") as f:
             f.write("\n\n".join(window.corpus))
+        if window.kind == "confusion":
+            with open(window.filename2, "w", encoding="utf-8") as f:
+                f.write("\n\n".join(window.corpus2))
         show_dialog_ok("{} conflicts were fixed and saved to \"{}\".".format(saved, window.filename))
-        exit()
+        sys.exit()
 
     if button == "skip":
         if window.this_conflict in window.solved:
@@ -347,15 +359,15 @@ window.show_all()
 if len(sys.argv) == 2:
     if not os.path.isfile(sys.argv[1]):
         show_dialog_ok("Files \"{}\" does not exist.".format(sys.argv[1]))
-        exit()
+        sys.exit()
     load_file("git", sys.argv[1])
 if len(sys.argv) == 4:
     if not os.path.isfile(sys.argv[1]):
         show_dialog_ok("Files \"{}\" does not exist.".format(sys.argv[1]))
-        exit()
+        sys.exit()
     if not os.path.isfile(sys.argv[2]):
         show_dialog_ok("Files \"{}\" does not exist.".format(sys.argv[2]))
-        exit()
+        sys.exit()
     load_file("confusion", sys.argv[1], sys.argv[2], sys.argv[3])
 
 if __name__ == "__main__":
