@@ -19,7 +19,7 @@ def show_dialog_ok(message, entry=False):
     md.destroy()    
 
 def load_file(kind, file, file2="", query=""):
-    with open(file) as f:
+    with open(file, encoding="utf-8") as f:
         text = f.read()
     if kind == "git":
         if not '<<<<<<< HEAD' in text:
@@ -29,7 +29,7 @@ def load_file(kind, file, file2="", query=""):
     window.corpus = text.split("\n\n")
     window.corpus_i = {x.split("# sent_id = ")[1].split("\n")[0]: i for i, x in enumerate(window.corpus) if x.strip()}
     if kind == "confusion":
-        with open(file2) as f:
+        with open(file2, encoding="utf-8") as f:
             text2 = f.read()
         window.corpus2 = text2.split("\n\n")
         window.corpus2_i = {x.split("# sent_id = ")[1].split("\n")[0]: i for i, x in enumerate(window.corpus2) if x.strip()}
@@ -235,7 +235,7 @@ def click_button(btn):
                     sentence.insert(start, window.solved[n])
                     saved += 1
                 window.corpus[i] = "\n".join(sentence)
-        with open(window.filename, "w") as f:
+        with open(window.filename, "w", encoding="utf-8") as f:
             f.write("\n\n".join(window.corpus))
         show_dialog_ok("{} conflicts were fixed and saved to \"{}\".".format(saved, window.filename))
         exit()
