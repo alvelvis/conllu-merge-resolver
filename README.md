@@ -4,6 +4,8 @@ Simple GUI to help solve Git conflicts in CoNLL-U files
 
 `python3 cosmo.py`
 
+![CoSMO Screenshot](https://github.com/alvelvis/conllu-merge-resolver/blob/main/screen.png?raw=true)
+
 ## Windows
 
 See [releases](https://github.com/alvelvis/conllu-merge-resolver/releases).
