@@ -24,7 +24,7 @@ def load_file(kind, file, file2="", query=""):
     if kind == "git":
         if not '<<<<<<< HEAD' in text:
             show_dialog_ok("File does not have Git conflict markers.")
-            return
+            sys.exit()
         window.kind = "git"
     window.corpus = text.split("\n\n")
     window.corpus_i = {x.split("# sent_id = ")[1].split("\n")[0]: i for i, x in enumerate(window.corpus) if x.strip()}
@@ -58,9 +58,9 @@ def count_conflicts(query):
     if window.kind == "confusion":
         query = query.replace("'", '"')
         important_cols = query.split("{")[1].split("}")[0] if '{' in query else ",".join(cols.split())
-        query = query.replace(important_cols, "").strip()
+        query = query.replace("{{{}}}".format(important_cols), "").strip()
         important_cols = important_cols.replace(" ", "").split(",")
-        if not '".*"' in query and query.strip() != '.*':
+        if not '".*"' in query and query != '.*':
             confusions = interrogar_UD.main(window.filename, 5, query)['output']
         else:
             confusions = []
