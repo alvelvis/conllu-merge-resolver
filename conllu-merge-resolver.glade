@@ -250,9 +250,9 @@
                     <property name="margin_right">5</property>
                     <property name="label" translatable="yes">label</property>
                     <property name="justify">right</property>
+                    <property name="wrap">True</property>
                     <property name="ellipsize">start</property>
-                    <property name="single_line_mode">True</property>
-                    <property name="lines">2</property>
+                    <property name="lines">1</property>
                   </object>
                   <packing>
                     <property name="left_attach">0</property>
@@ -267,7 +267,6 @@
                     <property name="can_focus">False</property>
                     <property name="label" translatable="yes">label</property>
                     <property name="justify">center</property>
-                    <property name="single_line_mode">True</property>
                   </object>
                   <packing>
                     <property name="left_attach">2</property>
@@ -283,9 +282,9 @@
                     <property name="margin_left">5</property>
                     <property name="margin_right">5</property>
                     <property name="label" translatable="yes">label</property>
+                    <property name="wrap">True</property>
                     <property name="ellipsize">end</property>
-                    <property name="single_line_mode">True</property>
-                    <property name="lines">2</property>
+                    <property name="lines">1</property>
                   </object>
                   <packing>
                     <property name="left_attach">3</property>
@@ -295,7 +294,7 @@
                 </child>
               </object>
               <packing>
-                <property name="resize">True</property>
+                <property name="resize">False</property>
                 <property name="shrink">True</property>
               </packing>
             </child>
