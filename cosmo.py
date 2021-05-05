@@ -212,8 +212,17 @@ def click_button(btn):
                     sentence.insert(start, window.solved[n])
                     saved += 1
                 window.corpus[i] = "\n".join(sentence)
+                if window.kind == "confusion":
+                    sentence = window.corpus2[i].splitlines()
+                    del sentence[start:end+1]
+                    for n in reversed(window.conflicts_l[l]):
+                        sentence.insert(start, window.solved[n])
+                    window.corpus2[i] = "\n".join(sentence)
         with open(window.filename, "w", encoding="utf-8") as f:
             f.write("\n\n".join(window.corpus))
+        if window.kind == "confusion":
+            with open(window.filename2, "w", encoding="utf-8") as f:
+                f.write("\n\n".join(window.corpus2))
         show_dialog_close("{} conflicts were fixed and saved to \"{}\".".format(saved, window.filename))
         sys.exit()
 
