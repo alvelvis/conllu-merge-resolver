@@ -6,8 +6,8 @@ import os
 import estrutura_ud
 import interrogar_UD
 
-def show_dialog_close(message, entry=False):
-    md = Gtk.MessageDialog(window, 0, Gtk.MessageType.INFO, Gtk.ButtonsType.CLOSE, message)
+def show_dialog_ok(message, entry=False):
+    md = Gtk.MessageDialog(window, 0, Gtk.MessageType.INFO, Gtk.ButtonsType.OK, message)
     if entry:
         md.userEntry = Gtk.Entry()
         md.userEntry.set_size_request(250,0)
@@ -23,14 +23,16 @@ def load_file(kind, file, file2="", query=""):
         text = f.read()
     if kind == "git":
         if not '<<<<<<< HEAD' in text:
-            show_dialog_close("File does not have Git conflict markers.")
+            show_dialog_ok("File does not have Git conflict markers.")
             return
         window.kind = "git"
     window.corpus = text.split("\n\n")
+    window.corpus_i = {x.split("# sent_id = ")[1].split("\n")[0]: i for i, x in enumerate(window.corpus) if x.strip()}
     if kind == "confusion":
         with open(file2) as f:
             text2 = f.read()
         window.corpus2 = text2.split("\n\n")
+        window.corpus2_i = {x.split("# sent_id = ")[1].split("\n")[0]: i for i, x in enumerate(window.corpus2) if x.strip()}
         window.kind = "confusion"
     window.filename = file
     window.filename2 = file2
@@ -45,7 +47,7 @@ def load_file(kind, file, file2="", query=""):
                 window.tokens[i][token.split("\t")[0]] = token.split("\t")[1]
     count_conflicts(query=query)
     if not window.conflicts:
-        show_dialog_close("No conflicts were found.")
+        show_dialog_ok("No conflicts were found.")
         exit()
     goto_conflict(0)
 
@@ -54,8 +56,22 @@ def count_conflicts(query):
         good_conflicts = list(filter(lambda i: "=======" in window.corpus[i] and len(window.corpus[i].split("<<<<<<< HEAD")) == len(window.corpus[i].split('>>>>>>> ')), range(len(window.corpus))))
         bad_conflicts = len(list(filter(lambda i: "=======" in window.corpus[i] and len(window.corpus[i].split("<<<<<<< HEAD")) != len(window.corpus[i].split('>>>>>>> ')), range(len(window.corpus)))))
     if window.kind == "confusion":
-        confusions = interrogar_UD.main(window.filename, 5, query.replace("'", '"'))['output']
-        good_conflicts = [[i for i, x in enumerate(window.corpus) if "# sent_id = {}\n".format(y['resultadoEstruturado'].sent_id) in x][0] for y in confusions]
+        query = query.replace("'", '"')
+        important_cols = query.split("{")[1].split("}")[0] if '{' in query else ",".join(cols.split())
+        query = query.replace(important_cols, "").strip()
+        important_cols = important_cols.replace(" ", "").split(",")
+        if not '".*"' in query and query.strip() != '.*':
+            confusions = interrogar_UD.main(window.filename, 5, query)['output']
+        else:
+            confusions = []
+            for sentence in window.corpus:
+                if sentence.strip():
+                    confusions.append({'resultadoAnotado': estrutura_ud.Sentence(), 'resultadoEstruturado': estrutura_ud.Sentence()})
+                    confusions[-1]['resultadoEstruturado'].build(sentence)
+                    confusions[-1]['resultadoAnotado'].build(sentence)
+                    for token in confusions[-1]['resultadoAnotado'].tokens:
+                        token.id += "@BOLD"
+        good_conflicts = [window.corpus_i[y['resultadoEstruturado'].sent_id] for y in confusions]
         bad_conflicts = 0
         tokens_query = {}
         for result in confusions:
@@ -70,10 +86,10 @@ def count_conflicts(query):
     for i in good_conflicts:
         if window.kind == "confusion":
             sent_id = window.corpus[i].split("# sent_id = ")[1].split("\n")[0]
-            challenger = [x for i, x in enumerate(window.corpus2) if "# sent_id = {}\n".format(sent_id) in x]
-            if not challenger:
+            if sent_id in window.corpus2_i:
+                challenger = window.corpus2[window.corpus2_i[sent_id]]
+            else:
                 continue
-            challenger = challenger[0]
             if len(list(filter(lambda x: len(x.split("\t")) == 10, window.corpus[i].splitlines()))) != len(list(filter(lambda x: len(x.split("\t")) == 10, challenger.splitlines()))):
                 continue
             head = {}
@@ -85,7 +101,7 @@ def count_conflicts(query):
                 if line.split("\t")[0] in tokens_query[sent_id]:
                     incoming[line.split("\t")[0]] = (l, line)
             for token_id in incoming:
-                if token_id in head and any(head[token_id][1].split("\t")[x] != incoming[token_id][1].split("\t")[x] for x in [cols.split().index(y) for y in "id word lemma upos xpos feats dephead deprel deps".split()]):
+                if token_id in head and any(head[token_id][1].split("\t")[x] != incoming[token_id][1].split("\t")[x] for x in [cols.split().index(y) for y in important_cols]):
                     conflict = {}
                     conflict['incoming_branch'] = ""
                     conflict['incoming'] = incoming[token_id][1]
@@ -161,8 +177,14 @@ def goto_conflict(n):
         objects['left_{}'.format(col)].get_style_context().remove_class("solved")
         objects['right_{}'.format(col)].get_style_context().remove_class("solved")
         if window.conflicts[n]['head'].split("\t")[i] != window.conflicts[n]['incoming'].split("\t")[i]:
-            objects['right_{}'.format(col)].get_style_context().add_class("conflict")
-            objects['left_{}'.format(col)].get_style_context().add_class("conflict")
+            if objects['token_in_conflict'].get_text().split()[cols.split().index(col)] == objects['left_{}'.format(col)].get_label():
+                objects['left_{}'.format(col)].get_style_context().add_class("solved")
+            else:
+                objects['left_{}'.format(col)].get_style_context().add_class("conflict")
+            if objects['token_in_conflict'].get_text().split()[cols.split().index(col)] == objects['right_{}'.format(col)].get_label():
+                objects['right_{}'.format(col)].get_style_context().add_class("solved")
+            else:
+                objects['right_{}'.format(col)].get_style_context().add_class("conflict")
     objects['left_label'].set_text('dephead ({})'.format(window.tokens[window.conflicts_i[n]].get(window.conflicts[n]['head'].split("\t")[6], "None")))
     objects['right_label'].set_text('({}) dephead'.format(window.tokens[window.conflicts_i[n]].get(window.conflicts[n]['incoming'].split("\t")[6], "None")))
 
@@ -177,14 +199,14 @@ def click_button(btn):
 
     if button == "open_confusion":
         window.king = "confusion"
-        show_dialog_close("First, pick the file you want to edit.")
+        show_dialog_ok("First, pick the file you want to edit.")
         win = FileChooserWindow()
         if win.filename:
-            show_dialog_close("Second, pick the file to which you are comparing it.")
+            show_dialog_ok("Second, pick the file to which you are comparing it.")
             win2 = FileChooserWindow()
             if win.filename and win2.filename:
-                show_dialog_close("Finally, type the query to find tokens in the center of the confusion.", True)
-                query = window.userEntry.strip()
+                show_dialog_ok("Finally, type the query to find tokens in the center of the confusion. Then, pick attributes being compared for confusions between braces.\n\nExample:\nword = \".*\" {id,word,lemma,upos,xpos,feats,dephead,deprel,deps,misc}", True)
+                query = window.userEntry
                 if query:
                     load_file("confusion", win.filename, win2.filename, query)
         return
@@ -215,18 +237,14 @@ def click_button(btn):
                 window.corpus[i] = "\n".join(sentence)
         with open(window.filename, "w") as f:
             f.write("\n\n".join(window.corpus))
-        show_dialog_close("{} conflicts were fixed and saved to \"{}\".".format(saved, window.filename))
+        show_dialog_ok("{} conflicts were fixed and saved to \"{}\".".format(saved, window.filename))
         exit()
 
     if button == "skip":
         if window.this_conflict in window.solved:
             del window.solved[window.this_conflict]
             objects['solved_conflicts'].set_text("{} solved conflicts".format(len(window.solved)))
-        if len(window.conflicts) -1 > window.this_conflict:
-            goto_conflict(window.this_conflict+1)
-        else:
-            goto_conflict(window.this_conflict)
-        return
+        goto_conflict(window.this_conflict)
 
     if button == "save_conflict":
         save_token_in_conflict()
@@ -240,14 +258,20 @@ def click_button(btn):
         return
 
 def save_token_in_conflict(btn=None):
-    if objects['token_in_conflict'].get_text().strip() and len(objects['token_in_conflict'].get_text().strip().split("\t")) == 10:
-        window.solved[window.this_conflict] = objects['token_in_conflict'].get_text()
+    conflict = objects['token_in_conflict'].get_text().strip()
+    if conflict and len(conflict.split("\t")) == 10 and all(x.strip() for x in conflict.split("\t")):
+        window.solved[window.this_conflict] = conflict
+        objects['token_in_conflict'].get_style_context().add_class("conflict-solved")
         objects['solved_conflicts'].set_text("{} solved conflicts".format(len(window.solved)))
     else:
-        show_dialog_close("Conflict not solved.")
+        show_dialog_ok("Conflict not saved: wrong annotation format")
+        return
     sentence_text = objects['sentence'].get_text(objects['sentence'].get_start_iter(), objects['sentence'].get_end_iter(), True).strip()
-    if sentence_text:
+    if sentence_text and all(not '\t' in x or (x.count("\t") == 9 and all(y.strip() for y in x.split("\t"))) for x in sentence_text.splitlines()):
         window.corpus[window.conflicts_i[window.this_conflict]] = sentence_text
+    else:
+        show_dialog_ok("Sentence modifications not saved: wrong annotation format")
+        return
     click_button(objects['next_conflict'])
 
 def change_col(btn):
@@ -322,15 +346,15 @@ window.show_all()
 
 if len(sys.argv) == 2:
     if not os.path.isfile(sys.argv[1]):
-        show_dialog_close("Files \"{}\" does not exist.".format(sys.argv[1]))
+        show_dialog_ok("Files \"{}\" does not exist.".format(sys.argv[1]))
         exit()
     load_file("git", sys.argv[1])
 if len(sys.argv) == 4:
     if not os.path.isfile(sys.argv[1]):
-        show_dialog_close("Files \"{}\" does not exist.".format(sys.argv[1]))
+        show_dialog_ok("Files \"{}\" does not exist.".format(sys.argv[1]))
         exit()
     if not os.path.isfile(sys.argv[2]):
-        show_dialog_close("Files \"{}\" does not exist.".format(sys.argv[2]))
+        show_dialog_ok("Files \"{}\" does not exist.".format(sys.argv[2]))
         exit()
     load_file("confusion", sys.argv[1], sys.argv[2], sys.argv[3])
 

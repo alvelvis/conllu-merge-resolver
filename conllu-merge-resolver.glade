@@ -197,6 +197,7 @@
                 <property name="visible">True</property>
                 <property name="can_focus">True</property>
                 <property name="receives_default">True</property>
+                <property name="tooltip_text" translatable="yes">Find next conflict you have not solved</property>
                 <property name="relief">none</property>
               </object>
               <packing>
@@ -206,11 +207,11 @@
             </child>
             <child>
               <object class="GtkButton" id="skip">
-                <property name="label" translatable="yes">Skip</property>
+                <property name="label" translatable="yes">Clear solution</property>
                 <property name="visible">True</property>
                 <property name="can_focus">True</property>
                 <property name="receives_default">True</property>
-                <property name="tooltip_text" translatable="yes">Clear any previous solution and skip this conflict</property>
+                <property name="tooltip_text" translatable="yes">Clear any solution you have saved for this conflict and leave it unsolved</property>
                 <property name="relief">none</property>
                 <property name="use_underline">True</property>
               </object>
@@ -303,7 +304,7 @@
             <property name="expand">False</property>
             <property name="fill">True</property>
             <property name="padding">10</property>
-            <property name="position">5</property>
+            <property name="position">6</property>
           </packing>
         </child>
         <child>
@@ -356,6 +357,7 @@
                 <child>
                   <object class="GtkButton" id="save_conflict">
                     <property name="label" translatable="yes">_Save (Alt+S)</property>
+                    <property name="name">save-conflict</property>
                     <property name="visible">True</property>
                     <property name="can_focus">True</property>
                     <property name="receives_default">True</property>
@@ -378,7 +380,7 @@
             <property name="expand">False</property>
             <property name="fill">False</property>
             <property name="padding">5</property>
-            <property name="position">6</property>
+            <property name="position">8</property>
           </packing>
         </child>
         <child>
@@ -981,7 +983,7 @@
           <packing>
             <property name="expand">False</property>
             <property name="fill">False</property>
-            <property name="padding">6</property>
+            <property name="padding">10</property>
             <property name="position">13</property>
           </packing>
         </child>
