@@ -46,7 +46,7 @@ def load_file(kind, file, file2="", query=""):
     count_conflicts(query=query)
     if not window.conflicts:
         show_dialog_close("No conflicts were found.")
-        exit()
+        sys.exit()
     goto_conflict(0)
 
 def count_conflicts(query):
@@ -200,7 +200,6 @@ def click_button(btn):
         return
 
     if button == "save_changes":
-        save_token_in_conflict()
         saved = 0
         for l in sorted(window.conflicts_l, key=lambda x: (x[0], -x[1])):
             if all(n in window.solved for n in window.conflicts_l[l]):
@@ -216,7 +215,7 @@ def click_button(btn):
         with open(window.filename, "w", encoding="utf-8") as f:
             f.write("\n\n".join(window.corpus))
         show_dialog_close("{} conflicts were fixed and saved to \"{}\".".format(saved, window.filename))
-        exit()
+        sys.exit()
 
     if button == "skip":
         if window.this_conflict in window.solved:
@@ -323,15 +322,15 @@ window.show_all()
 if len(sys.argv) == 2:
     if not os.path.isfile(sys.argv[1]):
         show_dialog_close("Files \"{}\" does not exist.".format(sys.argv[1]))
-        exit()
+        sys.exit()
     load_file("git", sys.argv[1])
 if len(sys.argv) == 4:
     if not os.path.isfile(sys.argv[1]):
         show_dialog_close("Files \"{}\" does not exist.".format(sys.argv[1]))
-        exit()
+        sys.exit()
     if not os.path.isfile(sys.argv[2]):
         show_dialog_close("Files \"{}\" does not exist.".format(sys.argv[2]))
-        exit()
+        sys.exit()
     load_file("confusion", sys.argv[1], sys.argv[2], sys.argv[3])
 
 if __name__ == "__main__":
