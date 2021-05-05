@@ -85,7 +85,7 @@ def count_conflicts(query):
                 if line.split("\t")[0] in tokens_query[sent_id]:
                     incoming[line.split("\t")[0]] = (l, line)
             for token_id in incoming:
-                if token_id in head and any(head[token_id][1].split("\t")[x] != incoming[token_id][1].split("\t")[x] for x in [cols.split().index(y) for y in cols.split()]):
+                if token_id in head and any(head[token_id][1].split("\t")[x] != incoming[token_id][1].split("\t")[x] for x in [cols.split().index(y) for y in "id word lemma upos xpos feats dephead deprel deps".split()]):
                     conflict = {}
                     conflict['incoming_branch'] = ""
                     conflict['incoming'] = incoming[token_id][1]
@@ -150,9 +150,9 @@ def goto_conflict(n):
     if window.kind == "git":
         objects['filename2'].set_text(window.conflicts[n]['incoming_branch'])
     if n in window.solved:
-        objects['token_in_conflict'].get_style_context().add_class("solved")
+        objects['token_in_conflict'].get_style_context().add_class("conflict-solved")
     else:
-        objects['token_in_conflict'].get_style_context().remove_class("solved")
+        objects['token_in_conflict'].get_style_context().remove_class("conflict-solved")
     for i, col in enumerate(cols.split()):
         objects['left_{}'.format(col)].set_label(window.conflicts[n]['head'].split("\t")[i])
         objects['right_{}'.format(col)].set_label(window.conflicts[n]['incoming'].split("\t")[i])
@@ -242,7 +242,6 @@ def click_button(btn):
 def save_token_in_conflict(btn=None):
     if objects['token_in_conflict'].get_text().strip() and len(objects['token_in_conflict'].get_text().strip().split("\t")) == 10:
         window.solved[window.this_conflict] = objects['token_in_conflict'].get_text()
-        objects['token_in_conflict'].get_style_context().add_class("solved")
         objects['solved_conflicts'].set_text("{} solved conflicts".format(len(window.solved)))
     else:
         show_dialog_close("Conflict not solved.")
