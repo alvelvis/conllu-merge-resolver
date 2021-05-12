@@ -329,10 +329,10 @@ class FileChooserWindow(Gtk.Window):
         dialog.add_filter(filter_conllu)
 
 builder = Gtk.Builder()
-builder.add_from_file("conllu-merge-resolver.glade")
+builder.add_from_file(os.path.dirname(os.path.abspath(__file__)) + "/conllu-merge-resolver.glade")
 screen = Gdk.Screen.get_default()
 provider = Gtk.CssProvider()
-provider.load_from_path("conllu-merge-resolver.css")
+provider.load_from_path(os.path.dirname(os.path.abspath(__file__)) + "/conllu-merge-resolver.css")
 Gtk.StyleContext.add_provider_for_screen(screen, provider, Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION)
 
 buttons = "next_unsolved save_conflict skip filename filename2 text_word text_left text_right open_git_file open_confusion next_conflict previous_conflict token_in_conflict save_changes filename conflicts this_conflict solved_conflicts unsolvable_conflicts sentence left_label right_label"
