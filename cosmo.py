@@ -155,7 +155,6 @@ def goto_conflict(n):
     objects['this_conflict'].set_text("Now: {}".format(n+1))
     if objects['sentence'].get_text(objects['sentence'].get_start_iter(), objects['sentence'].get_end_iter(), True) != window.corpus[window.conflicts_i[n]]:
         objects['sentence'].set_text(window.corpus[window.conflicts_i[n]])
-    objects['token_in_conflict'].set_text(window.conflicts[n]['head'] if not n in window.solved else window.solved[n])
     text_word_id = window.conflicts[n]['incoming'].split("\t")[0]
     text_word = window.conflicts[n]['incoming'].split("\t")[1]
     text_left = [y for x, y in window.tokens[window.conflicts_i[n]].items() if not '-' in x and int(x) < int(text_word_id)] if not '-' in text_word_id else ""
@@ -172,21 +171,13 @@ def goto_conflict(n):
     for i, col in enumerate(cols.split()):
         objects['left_{}'.format(col)].set_label(window.conflicts[n]['head'].split("\t")[i])
         objects['right_{}'.format(col)].set_label(window.conflicts[n]['incoming'].split("\t")[i])
-        objects['left_{}'.format(col)].get_style_context().remove_class("conflict")
-        objects['right_{}'.format(col)].get_style_context().remove_class("conflict")
-        objects['left_{}'.format(col)].get_style_context().remove_class("solved")
-        objects['right_{}'.format(col)].get_style_context().remove_class("solved")
-        if window.conflicts[n]['head'].split("\t")[i] != window.conflicts[n]['incoming'].split("\t")[i]:
-            if objects['token_in_conflict'].get_text().split()[cols.split().index(col)] == objects['left_{}'.format(col)].get_label():
-                objects['left_{}'.format(col)].get_style_context().add_class("solved")
-            else:
-                objects['left_{}'.format(col)].get_style_context().add_class("conflict")
-            if objects['token_in_conflict'].get_text().split()[cols.split().index(col)] == objects['right_{}'.format(col)].get_label():
-                objects['right_{}'.format(col)].get_style_context().add_class("solved")
-            else:
-                objects['right_{}'.format(col)].get_style_context().add_class("conflict")
     objects['left_label'].set_text('dephead ({})'.format(window.tokens[window.conflicts_i[n]].get(window.conflicts[n]['head'].split("\t")[6], "None")))
     objects['right_label'].set_text('({}) dephead'.format(window.tokens[window.conflicts_i[n]].get(window.conflicts[n]['incoming'].split("\t")[6], "None")))
+    objects['token_in_conflict'].set_text(window.conflicts[n]['head'] if not n in window.solved else window.solved[n])
+    if not n in window.solved:
+        for line in window.corpus[window.conflicts_i[n]].splitlines():
+            if line.count("\t") == 9 and line.split("\t")[0] == objects['token_in_conflict'].get_text().split("\t")[0]:
+                objects['token_in_conflict'].set_text(line)
 
 def click_button(btn):
     button = Gtk.Buildable.get_name(btn)
@@ -249,14 +240,8 @@ def click_button(btn):
         if window.kind == "confusion":
             with open(window.filename2, "w", encoding="utf-8") as f:
                 f.write("\n\n".join(window.corpus2))
-        show_dialog_ok("{} conflicts were fixed and saved to \"{}\".".format(saved, window.filename))
+        show_dialog_ok("{} conflicts were solved and saved to \"{}\".".format(saved, window.filename))
         sys.exit()
-
-    if button == "skip":
-        if window.this_conflict in window.solved:
-            del window.solved[window.this_conflict]
-            objects['solved_conflicts'].set_text("{} solved conflicts".format(len(window.solved)))
-        goto_conflict(window.this_conflict)
 
     if button == "save_conflict":
         save_token_in_conflict()
@@ -293,10 +278,48 @@ def change_col(btn):
     token_in_conflict = objects['token_in_conflict'].get_text().split("\t")
     token_in_conflict[c] = btn.get_label()
     objects['token_in_conflict'].set_text("\t".join(token_in_conflict))
-    objects['{}_{}'.format(direction, col)].get_style_context().add_class("solved")
-    objects['{}_{}'.format(direction, col)].get_style_context().remove_class("conflict")
-    objects['{}_{}'.format('left' if direction == 'right' else 'right', col)].get_style_context().remove_class("solved")
-    objects['{}_{}'.format('left' if direction == 'right' else 'right', col)].get_style_context().add_class("conflict")
+    return
+
+def sentence_changed(textbuffer):
+    entry_text = objects['token_in_conflict'].get_text()
+    for l, line in enumerate(textbuffer.get_text(textbuffer.get_start_iter(), textbuffer.get_end_iter(), True).splitlines()):
+        if line.count("\t") == 9 and line.split("\t")[0] == entry_text.split("\t")[0]:
+            if line != entry_text:#window.corpus[window.conflicts_i[window.this_conflict]].splitlines()[l]:
+                objects['token_in_conflict'].set_text(line)
+            break
+    return
+
+def token_in_conflict_changed(entry):
+    textbuffer = objects['sentence']
+    entry_text = entry.get_text()
+    sentence_text = textbuffer.get_text(textbuffer.get_start_iter(), textbuffer.get_end_iter(), True).splitlines()
+    for l, line in enumerate(sentence_text):
+        if line.count("\t") == 9 and line.split("\t")[0] == entry_text.split("\t")[0]:
+            if sentence_text[l] != entry_text:
+                sentence_text[l] = entry_text
+                textbuffer.set_text("\n".join(sentence_text))
+            break
+    for i, col in enumerate(cols.split()):
+        left = objects['left_{}'.format(col)].get_style_context()
+        right = objects['right_{}'.format(col)].get_style_context()
+        for _class in left.list_classes():
+            left.remove_class(_class)
+        for _class in right.list_classes():
+            right.remove_class(_class)
+        if (window.conflicts[window.this_conflict]['head'].split("\t")[i] != window.conflicts[window.this_conflict]['incoming'].split("\t")[i] or
+            window.conflicts[window.this_conflict]['head'].split("\t")[i] != entry_text.split("\t")[i]):
+            if entry_text.split("\t")[i] == objects['left_{}'.format(col)].get_label():
+                if not 'solved' in left.list_classes():
+                    left.add_class("solved")
+            else:
+                if not 'conflict' in left.list_classes():
+                    left.add_class("conflict")
+            if entry_text.split("\t")[i] == objects['right_{}'.format(col)].get_label():
+                if not 'solved' in right.list_classes():
+                    right.add_class("solved")
+            else:
+                if not 'conflict' in right.list_classes():
+                    right.add_class("conflict")
     return
 
 class FileChooserWindow(Gtk.Window):
@@ -335,7 +358,7 @@ provider = Gtk.CssProvider()
 provider.load_from_path(os.path.dirname(os.path.abspath(__file__)) + "/conllu-merge-resolver.css")
 Gtk.StyleContext.add_provider_for_screen(screen, provider, Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION)
 
-buttons = "next_unsolved save_conflict skip filename filename2 text_word text_left text_right open_git_file open_confusion next_conflict previous_conflict token_in_conflict save_changes filename conflicts this_conflict solved_conflicts unsolvable_conflicts sentence left_label right_label"
+buttons = "next_unsolved save_conflict filename filename2 text_word text_left text_right open_git_file open_confusion next_conflict previous_conflict token_in_conflict save_changes filename conflicts this_conflict solved_conflicts unsolvable_conflicts sentence left_label right_label"
 cols = "id word lemma upos xpos feats dephead deprel deps misc"
 
 objects = {
@@ -351,6 +374,9 @@ for col in cols.split():
     for direction in ["left", "right"]:
         objects["{}_{}".format(direction, col)] = builder.get_object("{}_{}".format(direction, col))
         objects["{}_{}".format(direction, col)].connect('clicked', change_col)
+
+objects['sentence'].connect('changed', sentence_changed)
+objects['token_in_conflict'].connect('changed', token_in_conflict_changed)
 
 window = builder.get_object("window1")
 window.connect("destroy", Gtk.main_quit)

@@ -2,8 +2,9 @@
     color: red;
 }
 
-.text-view {
+textview {
     font-family: 'Courier New', Courier, monospace;
+    font-size: 14px;
 }
 
 #save-conflict {

@@ -134,13 +134,9 @@
                 <child>
                   <object class="GtkTextView">
                     <property name="visible">True</property>
-                    <property name="app_paintable">True</property>
                     <property name="can_focus">True</property>
                     <property name="buffer">sentence</property>
                     <property name="monospace">True</property>
-                    <style>
-                      <class name="text-view"/>
-                    </style>
                   </object>
                 </child>
               </object>
@@ -205,27 +201,23 @@
                 <property name="top_attach">0</property>
               </packing>
             </child>
-            <child>
-              <object class="GtkButton" id="skip">
-                <property name="label" translatable="yes">Clear solution</property>
-                <property name="visible">True</property>
-                <property name="can_focus">True</property>
-                <property name="receives_default">True</property>
-                <property name="tooltip_text" translatable="yes">Clear any solution you have saved for this conflict and leave it unsolved</property>
-                <property name="relief">none</property>
-                <property name="use_underline">True</property>
-              </object>
-              <packing>
-                <property name="left_attach">3</property>
-                <property name="top_attach">0</property>
-              </packing>
-            </child>
           </object>
           <packing>
             <property name="expand">False</property>
             <property name="fill">False</property>
             <property name="padding">5</property>
             <property name="position">4</property>
+          </packing>
+        </child>
+        <child>
+          <object class="GtkSeparator">
+            <property name="visible">True</property>
+            <property name="can_focus">False</property>
+          </object>
+          <packing>
+            <property name="expand">False</property>
+            <property name="fill">True</property>
+            <property name="position">5</property>
           </packing>
         </child>
         <child>
