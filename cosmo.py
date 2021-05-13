@@ -312,21 +312,19 @@ def token_in_conflict_changed(entry):
     for i, col in enumerate(cols.split()):
         left = objects['left_{}'.format(col)].get_style_context()
         right = objects['right_{}'.format(col)].get_style_context()
-        for _class in left.list_classes():
-            if _class != "colbutton":
-                left.remove_class(_class)
-        for _class in right.list_classes():
-            if _class != "colbutton":
-                right.remove_class(_class)
+        left.remove_class("solved")
+        left.remove_class("conflict")
+        right.remove_class("solved")
+        right.remove_class("conflict")
         if (window.conflicts[window.this_conflict]['head'].split("\t")[i] != window.conflicts[window.this_conflict]['incoming'].split("\t")[i] or
             window.conflicts[window.this_conflict]['head'].split("\t")[i] != entry_text.split("\t")[i]):
-            if entry_text.split("\t")[i] == objects['left_{}'.format(col)].get_label():
+            if entry_text.split("\t")[i] == window.conflicts[window.this_conflict]['head'].split("\t")[i]:
                 if not 'solved' in left.list_classes():
                     left.add_class("solved")
             else:
                 if not 'conflict' in left.list_classes():
                     left.add_class("conflict")
-            if entry_text.split("\t")[i] == objects['right_{}'.format(col)].get_label():
+            if entry_text.split("\t")[i] == window.conflicts[window.this_conflict]['incoming'].split("\t")[i]:
                 if not 'solved' in right.list_classes():
                     right.add_class("solved")
             else:
