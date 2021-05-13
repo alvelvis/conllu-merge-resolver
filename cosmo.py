@@ -272,7 +272,9 @@ def save_token_in_conflict(btn=None):
         show_dialog_ok("Conflict not saved: wrong annotation format")
         return
     sentence_text = objects['sentence'].get_text(objects['sentence'].get_start_iter(), objects['sentence'].get_end_iter(), True).strip()
-    if sentence_text and all(not '\t' in x or (x.count("\t") == 9 and all(y.strip() for y in x.split("\t"))) for x in sentence_text.splitlines()):
+    if (sentence_text.strip() and 
+        all(not '\t' in x or (x.count("\t") == 9 and all(y.strip() for y in x.split("\t"))) for x in sentence_text.splitlines()) and
+        window.kind != "git" or (window.kind == "git" and all(x in sentence_text for x in ["<<<<<<< HEAD", "=======", ">>>>>>>"]))):
         window.corpus[window.conflicts_i[window.this_conflict]] = sentence_text
     else:
         show_dialog_ok("Sentence modifications not saved: wrong annotation format")
