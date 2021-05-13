@@ -23,3 +23,8 @@ textview {
 #text-word {
     font-weight: bold;
 }
+
+.colbutton {
+    padding: 1px;
+    margin: 1px;
+}
