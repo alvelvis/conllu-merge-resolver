@@ -254,6 +254,14 @@ def click_button(btn):
                 break
         return
 
+    if button == "help":
+        show_dialog_ok('Hotkeys:\n\n\
+    - Alt + S: Save the solution to the current conflict and save any sentence modifications you have made (you still need to click "Save and Quit" to save your changes to the actual file).\n\
+    - Alt + N / P: Discard any solution to the current conflict and proceed / go back.\n\
+    - Alt + U: Find the next conflict you have yet not solved.\n\
+    - Alt + H: Open this help message.\n\
+                ')
+
 def save_token_in_conflict(btn=None):
     conflict = objects['token_in_conflict'].get_text().strip()
     if conflict and len(conflict.split("\t")) == 10 and all(x.strip() for x in conflict.split("\t")):
@@ -360,7 +368,7 @@ provider = Gtk.CssProvider()
 provider.load_from_path(os.path.dirname(os.path.abspath(__file__)) + "/conllu-merge-resolver.css")
 Gtk.StyleContext.add_provider_for_screen(screen, provider, Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION)
 
-buttons = "next_unsolved save_conflict filename filename2 text_word text_left text_right open_git_file open_confusion next_conflict previous_conflict token_in_conflict save_changes filename conflicts this_conflict solved_conflicts unsolvable_conflicts sentence left_label right_label"
+buttons = "help next_unsolved save_conflict filename filename2 text_word text_left text_right open_git_file open_confusion next_conflict previous_conflict token_in_conflict save_changes filename conflicts this_conflict solved_conflicts unsolvable_conflicts sentence left_label right_label"
 cols = "id word lemma upos xpos feats dephead deprel deps misc"
 
 objects = {

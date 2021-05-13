@@ -27,6 +27,7 @@
                 <property name="visible">True</property>
                 <property name="can_focus">True</property>
                 <property name="receives_default">True</property>
+                <property name="tooltip_text" translatable="yes">Open a file with Git merge failure marks</property>
                 <property name="relief">none</property>
                 <property name="always_show_image">True</property>
               </object>
@@ -41,7 +42,7 @@
                 <property name="visible">True</property>
                 <property name="can_focus">True</property>
                 <property name="receives_default">True</property>
-                <property name="tooltip_text" translatable="yes">Conflicts not solved can be solved later</property>
+                <property name="tooltip_text" translatable="yes">Save the conflicts you solved to the picked file. Conflicts unsolved can be solved later.</property>
                 <property name="relief">none</property>
               </object>
               <packing>
@@ -55,6 +56,7 @@
                 <property name="visible">True</property>
                 <property name="can_focus">True</property>
                 <property name="receives_default">True</property>
+                <property name="tooltip_text" translatable="yes">Compare two files</property>
                 <property name="relief">none</property>
                 <property name="always_show_image">True</property>
               </object>
@@ -159,11 +161,10 @@
             <property name="column_homogeneous">True</property>
             <child>
               <object class="GtkButton" id="previous_conflict">
-                <property name="label" translatable="yes">&lt; _Previous conflict</property>
+                <property name="label" translatable="yes">&lt;&lt; _Previous conflict</property>
                 <property name="visible">True</property>
                 <property name="can_focus">True</property>
                 <property name="receives_default">True</property>
-                <property name="tooltip_text" translatable="yes">Alt+P</property>
                 <property name="relief">none</property>
                 <property name="use_underline">True</property>
               </object>
@@ -174,11 +175,10 @@
             </child>
             <child>
               <object class="GtkButton" id="next_conflict">
-                <property name="label" translatable="yes">_Next conflict &gt;</property>
+                <property name="label" translatable="yes">_Next conflict &gt;&gt;</property>
                 <property name="visible">True</property>
                 <property name="can_focus">True</property>
                 <property name="receives_default">True</property>
-                <property name="tooltip_text" translatable="yes">Alt+N</property>
                 <property name="relief">none</property>
                 <property name="use_underline">True</property>
               </object>
@@ -189,15 +189,29 @@
             </child>
             <child>
               <object class="GtkButton" id="next_unsolved">
-                <property name="label" translatable="yes">Go to next unsolved</property>
+                <property name="label" translatable="yes">Go to next _Unsolved</property>
                 <property name="visible">True</property>
                 <property name="can_focus">True</property>
                 <property name="receives_default">True</property>
-                <property name="tooltip_text" translatable="yes">Find next conflict you have not solved</property>
                 <property name="relief">none</property>
+                <property name="use_underline">True</property>
               </object>
               <packing>
                 <property name="left_attach">2</property>
+                <property name="top_attach">0</property>
+              </packing>
+            </child>
+            <child>
+              <object class="GtkButton" id="help">
+                <property name="label" translatable="yes">_Help</property>
+                <property name="visible">True</property>
+                <property name="can_focus">True</property>
+                <property name="receives_default">True</property>
+                <property name="relief">none</property>
+                <property name="use_underline">True</property>
+              </object>
+              <packing>
+                <property name="left_attach">3</property>
                 <property name="top_attach">0</property>
               </packing>
             </child>
