@@ -303,9 +303,11 @@ def token_in_conflict_changed(entry):
         left = objects['left_{}'.format(col)].get_style_context()
         right = objects['right_{}'.format(col)].get_style_context()
         for _class in left.list_classes():
-            left.remove_class(_class)
+            if _class != "colbutton":
+                left.remove_class(_class)
         for _class in right.list_classes():
-            right.remove_class(_class)
+            if _class != "colbutton":
+                right.remove_class(_class)
         if (window.conflicts[window.this_conflict]['head'].split("\t")[i] != window.conflicts[window.this_conflict]['incoming'].split("\t")[i] or
             window.conflicts[window.this_conflict]['head'].split("\t")[i] != entry_text.split("\t")[i]):
             if entry_text.split("\t")[i] == objects['left_{}'.format(col)].get_label():

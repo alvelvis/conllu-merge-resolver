@@ -25,6 +25,5 @@ textview {
 }
 
 .colbutton {
-    padding: 1px;
-    margin: 1px;
+    padding: 0 5 0 5;
 }
