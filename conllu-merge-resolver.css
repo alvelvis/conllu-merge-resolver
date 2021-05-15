@@ -1,10 +1,14 @@
-.conflict {
-    color: red;
+.bold-label {
+    font-weight: bold;
 }
 
-textview {
-    font-family: 'Courier New', Courier, monospace;
+.text-label {
     font-size: 14px;
+}
+
+.conflict {
+    color: red;
+    font-weight: bold;
 }
 
 #save-conflict {
@@ -12,12 +16,12 @@ textview {
 }
 
 .conflict-solved {
-    /*color: white;*/
     background: #B2F77D;
 }
 
 .solved {
     color: green;
+    font-weight: bold;
 }
 
 #text-word {
