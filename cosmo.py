@@ -1,9 +1,13 @@
 import gi
 gi.require_version('Gtk', '3.0')
 gi.require_version('GtkSource', '3.0')
-from gi.repository import Gtk, Gdk, GtkSource, GObject, GLib
+gi.require_version('WebKit2', '4.0')
+from gi.repository import Gtk, Gdk, GtkSource, GObject, GLib, WebKit2
+from udapi.block.write.html import Html as udapi_tree
+from udapi.core.document import Document as udapi_document
 import sys
 import os
+import subprocess
 import json
 import estrutura_ud
 import interrogar_UD
@@ -19,7 +23,36 @@ def show_dialog_ok(message, entry=False):
     if entry:
         window.userEntry = md.userEntry.get_text()
     md.destroy()
-    return 
+    return
+
+class FileChooserWindow(Gtk.Window):
+    def __init__(self):
+        dialog = Gtk.FileChooserDialog(
+            title="Please choose a CoNLL-U file", parent=window, action=Gtk.FileChooserAction.OPEN
+        )
+        dialog.add_buttons(
+            Gtk.STOCK_CANCEL,
+            Gtk.ResponseType.CANCEL,
+            Gtk.STOCK_OPEN,
+            Gtk.ResponseType.OK,
+        )
+
+        self.add_filters(dialog)
+
+        response = dialog.run()
+        
+        if response == Gtk.ResponseType.OK:
+            self.filename = dialog.get_filename()
+        elif response == Gtk.ResponseType.CANCEL:
+            self.filename = ""
+        
+        dialog.destroy()
+
+    def add_filters(self, dialog):
+        filter_conllu = Gtk.FileFilter()
+        filter_conllu.set_name("CoNLL-U files (*.conllu)")
+        filter_conllu.add_pattern("*.conllu")
+        dialog.add_filter(filter_conllu)
 
 def load_file(kind, file, file2="", query=""):
     with open(file, encoding="utf-8") as f:
@@ -94,7 +127,8 @@ def count_conflicts(query):
                 challenger = window.corpus2[window.corpus2_i[sent_id]]
             else:
                 continue
-            if len(list(filter(lambda x: len(x.split("\t")) == 10, window.corpus[i].splitlines()))) != len(list(filter(lambda x: len(x.split("\t")) == 10, challenger.splitlines()))):
+            if (len(list(filter(lambda x: len(x.split("\t")) == 10, window.corpus[i].splitlines()))) != 
+            len(list(filter(lambda x: len(x.split("\t")) == 10, challenger.splitlines())))):
                 continue
             head = {}
             incoming = {}
@@ -105,7 +139,9 @@ def count_conflicts(query):
                 if line.split("\t")[0] in tokens_query[sent_id]:
                     incoming[line.split("\t")[0]] = (l, line)
             for token_id in incoming:
-                if token_id in head and any(head[token_id][1].split("\t")[x] != incoming[token_id][1].split("\t")[x] for x in [cols.split().index(y) for y in important_cols]):
+                if (token_id in head and 
+                any(head[token_id][1].split("\t")[x] != incoming[token_id][1].split("\t")[x] for 
+                x in [cols.split().index(y) for y in important_cols])):
                     conflict = {}
                     conflict['incoming_branch'] = ""
                     conflict['incoming'] = incoming[token_id][1]
@@ -130,7 +166,8 @@ def count_conflicts(query):
                     continue
                 if line.startswith(">>>>>>>"):
                     inside_incoming = False
-                    if all(len(x.split("\t")) == 10 for x in head + incoming) and [x.split("\t")[1] for x in head] == [x.split("\t")[1] for x in incoming]:
+                    if (all(len(x.split("\t")) == 10 for x in head + incoming) and 
+                    [x.split("\t")[1] for x in head] == [x.split("\t")[1] for x in incoming]):
                         incoming_branch = line.split(">>>>>>>")[1].split()[0].strip()
                         conflict = {}
                         conflict['incoming_branch'] = incoming_branch
@@ -154,20 +191,21 @@ def count_conflicts(query):
         i: list(filter(lambda n: window.conflicts_i[n] == i, range(len(window.conflicts))))
         for i in range(len(window.corpus))}
     window.conflicts_nav_label = {}
+    window.token_in_conflict = ""
     position = 0
     for i in window.conflicts_each_i:
         if window.corpus[i].strip() and window.conflicts_each_i[i]:
             position += 1
             sent_id = window.corpus[i].split("# sent_id = ")[1].split("\n")[0]
             label = Gtk.Label(
-                label=sent_id,
+                label=" {}".format(sent_id),
                 xalign=0)
             objects['conflicts_nav'].insert(label, -1)
             label.n = window.conflicts_each_i[i][0]
             for _i, _n in enumerate(window.conflicts_each_i[i]):
                 position += 1
                 label = Gtk.Label(
-                    label=" └ {}".format(
+                    label=" => {}".format(
                         #window.conflicts[_n]['head'].split("\t")[0], 
                         window.conflicts[_n]['head'].split("\t")[1]),
                     xalign=0)
@@ -192,24 +230,22 @@ def goto_conflict(n):
     objects['text_right'].set_text(" ".join(text_right))
     if window.kind == "git":
         objects['filename2'].set_text(window.conflicts[n]['incoming_branch'])
-    if n in window.solved:
-        objects['token_in_conflict'].get_style_context().add_class("conflict-solved")
-    else:
-        objects['token_in_conflict'].get_style_context().remove_class("conflict-solved")
     for i, col in enumerate(cols.split()):
         objects['left_{}'.format(col)].set_label(window.conflicts[n]['head'].split("\t")[i])
         objects['right_{}'.format(col)].set_label(window.conflicts[n]['incoming'].split("\t")[i])
+    for l, line in enumerate(window.corpus[window.conflicts_i[n]].splitlines()):
+        if line.count("\t") == 9 and line.split("\t")[0] == window.conflicts[n]['head'].split("\t")[0]:
+            window.token_in_conflict = line if not n in window.solved else window.solved[n]
+            token_in_conflict_changed()
+            break
     left_head = window.tokens[window.conflicts_i[n]].get(window.conflicts[n]['head'].split("\t")[6], "None")
     right_head = window.tokens[window.conflicts_i[n]].get(window.conflicts[n]['incoming'].split("\t")[6], "None")
     objects['left_label'].set_text('[ {} ]'.format(left_head))
     objects['right_label'].set_text('[ {} ]'.format(right_head))
-    for l, line in enumerate(window.corpus[window.conflicts_i[n]].splitlines()):
-        if line.count("\t") == 9 and line.split("\t")[0] == window.conflicts[n]['head'].split("\t")[0]:
-            objects['token_in_conflict'].set_text(line if not n in window.solved else window.solved[n])
-            break
     objects['conflicts_nav'].select_row(window.conflicts_nav_label[n])
     GLib.idle_add(window.conflicts_nav_label[n].grab_focus)
     objects['conflicts_nav'].show_all()
+    objects['main_notebook'].prev_page()
     return
 
 def click_button(btn):
@@ -229,7 +265,9 @@ def click_button(btn):
             show_dialog_ok("Second, choose the file to which you are comparing it.")
             win2 = FileChooserWindow()
             if win.filename and win2.filename:
-                show_dialog_ok("Finally, type the query to find tokens in the center of the confusion. Choose the attributes where we should look for confusions (between braces).\n\Default:\nword = \".*\" {id,word,lemma,upos,xpos,feats,dephead,deprel,deps,misc}", True)
+                show_dialog_ok("Finally, type the query to find tokens in the center of the confusion. \
+                    Choose the attributes where we should look for confusions (between braces).\n\
+                    Default:\nword = \".*\" {id,word,lemma,upos,xpos,feats,dephead,deprel,deps,misc}", True)
                 query = window.userEntry
                 if not query.strip():
                     query = ".*"
@@ -295,19 +333,26 @@ def click_button(btn):
 
     if button == "help":
         show_dialog_ok('Hotkeys:\n\n\
-    - Alt + S: Save the solution to the current conflict and save any sentence modifications you have made (you still need to click "Save and Quit" to save your changes to the actual file).\n\
-    - Alt + N / P: Discard any solution to the current conflict and proceed / go back.\n\
+    - Alt + S: Save any sentence modifications you have made (you still need to click "Save and Quit" to save your changes to the actual file).\nIn case it\'s a Git merge conflict file, note that the INCOMING chunk in the sentence will be discarded, so do not edit it.\n\
+    - Alt + N / P: Discard any unsaved solution to the current conflict and proceed / go back.\n\
     - Alt + R: Copy all attributes for this token in conflict from the file in the right.\n\
     - Alt + U: Find the next conflict you have yet not solved.\n\
     - Alt + H: Open this help message.\n\
                 ')
         return
 
+    if button == "tree_button":
+        objects['main_notebook'].next_page()
+        return
+
+    if button == "sentence_button":
+        objects['main_notebook'].prev_page()
+        return
+
 def save_token_in_conflict(btn=None):
-    conflict = objects['token_in_conflict'].get_text().strip()
+    conflict = window.token_in_conflict.strip()
     if conflict and conflict.count("\t") == 9 and all(x.strip() for x in conflict.split("\t")):
         window.solved[window.this_conflict] = conflict
-        objects['token_in_conflict'].get_style_context().add_class("conflict-solved")
         objects['solved_conflicts'].set_text("{} solved conflicts".format(len(window.solved)))
         conflicts_nav_label = window.conflicts_nav_label[window.this_conflict].get_children()[0].get_label()
         if not '✔' in conflicts_nav_label:
@@ -315,7 +360,8 @@ def save_token_in_conflict(btn=None):
     else:
         show_dialog_ok("Conflict not saved: wrong annotation format")
         return
-    sentence_text = objects['sentence'].get_text(objects['sentence'].get_start_iter(), objects['sentence'].get_end_iter(), True).strip()
+    sentence_text = objects['sentence'].get_text(
+        objects['sentence'].get_start_iter(), objects['sentence'].get_end_iter(), True).strip()
     if (sentence_text.strip() and 
         all(not '\t' in x or (x.count("\t") == 9 and all(y.strip() for y in x.split("\t"))) for x in sentence_text.splitlines()) and
         window.kind != "git" or (window.kind == "git" and all(x in sentence_text for x in ["<<<<<<< HEAD", "=======", ">>>>>>>"]))):
@@ -328,38 +374,40 @@ def save_token_in_conflict(btn=None):
 
 def change_col(btn):
     col = Gtk.Buildable.get_name(btn).split("_")[1]
-    direction = Gtk.Buildable.get_name(btn).split("_")[0]
-    c = cols.split().index(col)
-    token_in_conflict = objects['token_in_conflict'].get_text().split("\t")
+    c = cols.split().index(col)    
+    token_in_conflict = window.token_in_conflict.split("\t")
     token_in_conflict[c] = btn.get_label()
-    objects['token_in_conflict'].set_text("\t".join(token_in_conflict))
+    window.token_in_conflict = "\t".join(token_in_conflict)
+    token_in_conflict_changed()
     return
 
 def sentence_changed(textbuffer):
-    entry_text = objects['token_in_conflict'].get_text()
-    for l, line in enumerate(textbuffer.get_text(textbuffer.get_start_iter(), textbuffer.get_end_iter(), True).splitlines()):
-        if line.count("\t") == 9 and line.split("\t")[0] == entry_text.split("\t")[0]:
-            if line != entry_text:
-                objects['token_in_conflict'].set_text(line)
+    for l, line in enumerate(
+        textbuffer.get_text(textbuffer.get_start_iter(), textbuffer.get_end_iter(), True).splitlines()):
+        if line.count("\t") == 9 and line.split("\t")[0] == window.token_in_conflict.split("\t")[0]:
+            if line != window.token_in_conflict:
+                window.token_in_conflict = line
+                token_in_conflict_changed()
             break
     return
 
-def token_in_conflict_changed(entry=None):
-    textbuffer = objects['sentence']
-    entry_text = objects['token_in_conflict'].get_text()
-    sentence_text = textbuffer.get_text(textbuffer.get_start_iter(), textbuffer.get_end_iter(), True).splitlines()
+def token_in_conflict_changed():
+    sentence_text = objects['sentence'].get_text(
+        objects['sentence'].get_start_iter(), objects['sentence'].get_end_iter(), False).splitlines()
     for l, line in enumerate(sentence_text):
-        if line.count("\t") == 9 and line.split("\t")[0] == entry_text.split("\t")[0]:
-            if sentence_text[l] != entry_text:
-                sentence_text[l] = entry_text
-                textbuffer.set_text("\n".join(sentence_text))
-            objects['sentence'].remove_tag_by_name("conflict", objects['sentence'].get_start_iter(), objects['sentence'].get_end_iter())
+        if line.count("\t") == 9 and line.split("\t")[0] == window.token_in_conflict.split("\t")[0]:
+            if sentence_text[l] != window.token_in_conflict:
+                sentence_text[l] = window.token_in_conflict
+                objects['sentence'].set_text("\n".join(sentence_text))
+            objects['sentence'].remove_tag_by_name(
+                "conflict", objects['sentence'].get_start_iter(), objects['sentence'].get_end_iter())
             objects['sentence'].apply_tag_by_name(
                 'conflict',
                 objects['sentence'].get_iter_at_line(l), 
-                objects['sentence'].get_iter_at_line_offset(l, len(entry_text)))
+                objects['sentence'].get_iter_at_line_offset(l, len(window.token_in_conflict)))
             objects['sentence'].move_mark_by_name("conflict", objects['sentence'].get_iter_at_line(l))
-            GLib.idle_add(objects['sentence_view'].scroll_to_mark, textbuffer.get_mark("conflict"), 0.1, True, 0.0, 0.5)
+            GLib.idle_add(
+                objects['sentence_view'].scroll_to_mark, objects['sentence'].get_mark("conflict"), 0.1, True, 0.0, 0.5)
             break
     for i, col in enumerate(cols.split()):
         left = objects['left_{}'.format(col)].get_style_context()
@@ -367,16 +415,17 @@ def token_in_conflict_changed(entry=None):
         left.remove_class("solved")
         left.remove_class("conflict")
         right.remove_class("solved")
-        right.remove_class("conflict")
+        right.remove_class("conflict")            
         if (window.conflicts[window.this_conflict]['head'].split("\t")[i] != window.conflicts[window.this_conflict]['incoming'].split("\t")[i] or
-            window.conflicts[window.this_conflict]['head'].split("\t")[i] != entry_text.split("\t")[i]):
-            if entry_text.split("\t")[i] == window.conflicts[window.this_conflict]['head'].split("\t")[i]:
+            (window.conflicts[window.this_conflict]['head'].split("\t")[i] == window.conflicts[window.this_conflict]['incoming'].split("\t")[i] and
+            window.conflicts[window.this_conflict]['head'].split("\t")[i] != window.token_in_conflict.split("\t")[i])):
+            if window.token_in_conflict.split("\t")[i] == window.conflicts[window.this_conflict]['head'].split("\t")[i]:
                 if not 'solved' in left.list_classes():
                     left.add_class("solved")
             else:
                 if not 'conflict' in left.list_classes():
                     left.add_class("conflict")
-            if entry_text.split("\t")[i] == window.conflicts[window.this_conflict]['incoming'].split("\t")[i]:
+            if window.token_in_conflict.split("\t")[i] == window.conflicts[window.this_conflict]['incoming'].split("\t")[i]:
                 if not 'solved' in right.list_classes():
                     right.add_class("solved")
             else:
@@ -402,36 +451,39 @@ def conflicts_nav_changed(btn, row):
     goto_conflict(int(n))
     pass
 
-class FileChooserWindow(Gtk.Window):
-    def __init__(self):
-        dialog = Gtk.FileChooserDialog(
-            title="Please choose a CoNLL-U file", parent=window, action=Gtk.FileChooserAction.OPEN
-        )
-        dialog.add_buttons(
-            Gtk.STOCK_CANCEL,
-            Gtk.ResponseType.CANCEL,
-            Gtk.STOCK_OPEN,
-            Gtk.ResponseType.OK,
-        )
+def change_notebook_page(btn, previous, page):
+    if page == 0:
+        objects['grid_cols'].show()
+        objects['tree_button'].get_style_context().remove_class("notebook-button-active")
+        objects['sentence_button'].get_style_context().add_class("notebook-button-active")
+    elif page == 1:
+        objects['grid_cols'].hide()
+        objects['tree_button'].get_style_context().add_class("notebook-button-active")
+        objects['sentence_button'].get_style_context().remove_class("notebook-button-active")
+        with open(os.path.dirname(os.path.abspath(__file__)) + "/sentence.conllu", "w") as f:
+            f.write(objects['sentence'].get_text(
+                objects['sentence'].get_start_iter(), 
+                objects['sentence'].get_end_iter(), 
+                True).strip() + "\n\n")
+        html = os.popen("udapy write.Html < '{}'".format(
+            os.path.dirname(os.path.abspath(__file__)) + "/sentence.conllu",
+        )).read()
+        objects['tree_viewer'].load_html(html.replace(
+            "</body>", '<script>$("svg").parent().parent().addClass("dragscroll").css("cursor", "grab")</script>\
+            \n<script type="text/javascript" src="https://cdn.rawgit.com/asvd/dragscroll/master/dragscroll.js"></script></body>'
+            ))
+        os.remove(os.path.dirname(os.path.abspath(__file__)) + "/sentence.conllu")
+    return
 
-        self.add_filters(dialog)
-
-        response = dialog.run()
-        
-        if response == Gtk.ResponseType.OK:
-            self.filename = dialog.get_filename()
-        elif response == Gtk.ResponseType.CANCEL:
-            self.filename = ""
-        
-        dialog.destroy()
-
-    def add_filters(self, dialog):
-        filter_conllu = Gtk.FileFilter()
-        filter_conllu.set_name("CoNLL-U files (*.conllu)")
-        filter_conllu.add_pattern("*.conllu")
-        dialog.add_filter(filter_conllu)
+def tree_zoom(btn):
+    objects['tree_viewer'].set_zoom_level(btn.get_value()/100)
+    objects['tree_viewer'].show_all()
+    window.config['tree_zoom'] = btn.get_value()
+    save_config()
+    return
 
 builder = Gtk.Builder()
+WebKit2.WebView()
 GObject.type_register(GtkSource.View)
 builder.add_from_file(os.path.dirname(os.path.abspath(__file__)) + "/conllu-merge-resolver.glade")
 screen = Gdk.Screen.get_default()
@@ -439,12 +491,17 @@ provider = Gtk.CssProvider()
 provider.load_from_path(os.path.dirname(os.path.abspath(__file__)) + "/conllu-merge-resolver.css")
 Gtk.StyleContext.add_provider_for_screen(screen, provider, Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION)
 
-buttons = "conflicts_nav font sentence_view copy_right help next_unsolved save_conflict filename filename2 text_word text_left text_right open_git_file open_confusion next_conflict previous_conflict token_in_conflict save_changes filename conflicts this_conflict solved_conflicts unsolvable_conflicts left_label right_label"
+buttons = "tree_button sentence_button copy_right help next_unsolved save_conflict open_git_file open_confusion \
+    next_conflict previous_conflict save_changes"
+other_objects = "grid_cols tree_zoom main_notebook conflicts_nav font sentence_view filename filename2 \
+    text_word text_left text_right conflicts this_conflict solved_conflicts unsolvable_conflicts \
+    left_label right_label tree_viewer"
 cols = "id word lemma upos xpos feats dephead deprel deps misc"
 
 objects = {
     x: builder.get_object(x)
-    for x in buttons.split()
+    for x in buttons.split() + 
+    other_objects.split()
 }
 
 for button in buttons.split():
@@ -460,9 +517,10 @@ objects['sentence'] = objects['sentence_view'].get_buffer()
 objects['sentence'].connect('changed', sentence_changed)
 objects['sentence'].create_tag('conflict', background="lightyellow")
 objects['sentence'].create_mark('conflict', objects['sentence'].get_start_iter())
-objects['token_in_conflict'].connect('changed', token_in_conflict_changed)
 objects['font'].connect('font-set', font_changed)
 objects['conflicts_nav'].connect('row-activated', conflicts_nav_changed)
+objects['main_notebook'].connect('switch-page', change_notebook_page)
+objects['tree_zoom'].connect('value-changed', tree_zoom)
 
 window = builder.get_object("window1")
 window.config = {}
@@ -472,10 +530,15 @@ if os.path.isfile(config_path):
     with open(config_path) as f:
         window.config.update(json.load(f))
 
-objects['font'].set_font(window.config.get(
-    'font', 
-    "Courier New 12" if "win" in sys.platform else "Monospace 10"))
+objects['font'].set_font(
+    window.config.get(
+        'font', 
+        "Courier New 12" if "win" in sys.platform else "Monospace 10"))
 font_changed(objects['font'])
+
+objects['tree_zoom'].set_value(
+    window.config.get(
+        'tree_zoom', 100))
 
 if len(sys.argv) == 2:
     if not os.path.isfile(sys.argv[1]):

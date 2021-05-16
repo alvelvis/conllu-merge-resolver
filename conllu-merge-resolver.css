@@ -2,11 +2,15 @@
     font-weight: bold;
 }
 
+.notebook-button-active {
+    background: lightgrey;
+}
+
 .text-label {
     font-size: 14px;
 }
 
-.conflict {
+.conflict label {
     color: red;
     font-weight: bold;
 }
