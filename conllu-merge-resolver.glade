@@ -3,13 +3,7 @@
 <interface>
   <requires lib="gtk+" version="3.20"/>
   <requires lib="gtksourceview" version="3.0"/>
-  <requires lib="webkit2gtk" version="2.12"/>
   <!-- interface-css-provider-path conllu-merge-resolver.css -->
-  <object class="WebKitSettings" id="settings1">
-    <property name="enable_plugins">True</property>
-    <property name="enable_developer_extras">True</property>
-    <property name="user_agent">Mozilla/5.0 (X11; Ubuntu; Linux x86_64) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/14.0 Safari/605.1.15</property>
-  </object>
   <object class="GtkAdjustment" id="tree_zoom_adjustment">
     <property name="lower">5</property>
     <property name="upper">96</property>
@@ -203,6 +197,7 @@
                         <property name="shadow_type">in</property>
                         <child>
                           <object class="GtkSourceView" id="tree_viewer">
+                            <property name="name">tree-viewer</property>
                             <property name="visible">True</property>
                             <property name="can_focus">True</property>
                             <property name="hexpand">True</property>

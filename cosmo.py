@@ -1,15 +1,11 @@
-# -*- coding: utf-8 -*-
 import gi
 gi.require_version('Gtk', '3.0')
 gi.require_version('GtkSource', '3.0')
-gi.require_version('WebKit2', '4.0')
-from gi.repository import Gtk, Gdk, GtkSource, GObject, GLib, WebKit2, Pango
-import udapi
-#from udapi.block.write.html import Html as udapi_tree
-#from udapi.core.document import Document as udapi_document
+from gi.repository import Gtk, Gdk, GtkSource, GObject, GLib, Pango
+from udapi.core.document import Document
+from io import StringIO
 import sys
 import os
-import subprocess
 import json
 import estrutura_ud
 import interrogar_UD
@@ -208,7 +204,6 @@ def count_conflicts(query):
                 position += 1
                 label = Gtk.Label(
                     label=" => {}".format(
-                        #window.conflicts[_n]['head'].split("\t")[0], 
                         window.conflicts[_n]['head'].split("\t")[1]),
                     xalign=0)
                 label.n = _n
@@ -344,14 +339,26 @@ def click_button(btn):
         return
 
     if button == "tree_button":
-        with open(os.path.dirname(os.path.abspath(__file__)) + "/sentence.conllu", "w") as f:
-            f.write(objects['sentence'].get_text(
+        sentence = (objects['sentence'].get_text(
                 objects['sentence'].get_start_iter(), 
                 objects['sentence'].get_end_iter(), 
-                True).strip() + "\n\n")
-        output = "\n".join(os.popen("udapy write.TextModeTrees indent=4 print_doc_meta=0 print_text=0 print_sent_id=0 hints=0 attributes=form,upos,deprel < '{}' | less -R".format(
-            os.path.dirname(os.path.abspath(__file__)) + "/sentence.conllu",
-            )).read().splitlines()[1:])
+                True).strip()).splitlines()
+        new_sentence = []
+        is_incoming = False
+        for line in sentence:
+            if line.startswith('<<<<<<< HEAD'):
+                continue
+            if line.startswith('======='):
+                is_incoming = True
+                continue
+            if line.startswith(">>>>>>> "):
+                is_incoming = False
+                continue
+            if not is_incoming:
+                new_sentence.append(line)        
+        with open(os.path.dirname(os.path.abspath(__file__)) + "/sentence.conllu", "w", encoding="utf-8") as f:
+            f.write("\n".join(new_sentence).strip() + "\n\n")
+        output = "\n".join(draw_tree("sentence.conllu").splitlines()[1:])
         if not ' root' in output.splitlines()[0]:
             output = output.split("    │", 1)[1]
             output = ("────┮" + output).strip()
@@ -374,6 +381,34 @@ def click_button(btn):
         objects['tree_container'].hide()
         objects['grid_cols'].show()
         return
+
+def draw_tree(conllu):
+    """Test the draw() method, which uses udapi.block.write.textmodetrees."""
+    with RedirectedStdout() as out:
+        doc = Document()
+        data_filename = os.path.join(os.path.dirname(__file__), conllu)
+        doc.load_conllu(data_filename)
+        root = doc.bundles[0].get_tree()
+        root.draw(indent=4, color=False, attributes='form,upos,deprel',
+                    print_sent_id=False, print_text=False, print_doc_meta=False)
+        s = str(out)
+    return s
+
+class RedirectedStdout:
+    def __init__(self):
+        self._stdout = None
+        self._string_io = None
+
+    def __enter__(self):
+        self._stdout = sys.stdout
+        sys.stdout = self._string_io = StringIO()
+        return self
+
+    def __exit__(self, type, value, traceback):
+        sys.stdout = self._stdout
+
+    def __str__(self):
+        return self._string_io.getvalue()
 
 def save_token_in_conflict(btn=None):
     conflict = window.token_in_conflict.strip()
@@ -484,7 +519,6 @@ def tree_zoom(btn):
     return
 
 builder = Gtk.Builder()
-WebKit2.WebView()
 GObject.type_register(GtkSource.View)
 builder.add_from_file(os.path.dirname(os.path.abspath(__file__)) + "/conllu-merge-resolver.glade")
 screen = Gdk.Screen.get_default()
