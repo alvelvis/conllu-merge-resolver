@@ -386,7 +386,7 @@ def draw_tree(conllu):
     """Test the draw() method, which uses udapi.block.write.textmodetrees."""
     with RedirectedStdout() as out:
         doc = Document()
-        data_filename = os.path.join(os.path.dirname(__file__), conllu)
+        data_filename = os.path.join(os.path.dirname(os.path.abspath(__file__)), conllu)
         doc.load_conllu(data_filename)
         root = doc.bundles[0].get_tree()
         root.draw(indent=4, color=False, attributes='form,upos,deprel',
