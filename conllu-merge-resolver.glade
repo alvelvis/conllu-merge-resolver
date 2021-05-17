@@ -259,13 +259,15 @@
           <packing>
             <property name="expand">True</property>
             <property name="fill">True</property>
-            <property name="position">4</property>
+            <property name="position">2</property>
           </packing>
         </child>
         <child>
           <object class="GtkGrid">
             <property name="visible">True</property>
             <property name="can_focus">False</property>
+            <property name="margin_left">10</property>
+            <property name="margin_right">10</property>
             <property name="column_homogeneous">True</property>
             <child>
               <object class="GtkButton" id="previous_conflict">
@@ -343,8 +345,8 @@
           <packing>
             <property name="expand">False</property>
             <property name="fill">False</property>
-            <property name="padding">10</property>
-            <property name="position">6</property>
+            <property name="padding">5</property>
+            <property name="position">3</property>
           </packing>
         </child>
         <child>
@@ -355,7 +357,7 @@
           <packing>
             <property name="expand">False</property>
             <property name="fill">True</property>
-            <property name="position">7</property>
+            <property name="position">4</property>
           </packing>
         </child>
         <child>
@@ -373,29 +375,6 @@
                 <property name="can_focus">False</property>
                 <property name="halign">center</property>
                 <property name="column_homogeneous">True</property>
-                <child>
-                  <object class="GtkLabel" id="text_left">
-                    <property name="visible">True</property>
-                    <property name="can_focus">False</property>
-                    <property name="halign">end</property>
-                    <property name="valign">center</property>
-                    <property name="margin_left">10</property>
-                    <property name="margin_right">5</property>
-                    <property name="label" translatable="yes">label</property>
-                    <property name="justify">right</property>
-                    <property name="wrap">True</property>
-                    <property name="ellipsize">start</property>
-                    <property name="lines">1</property>
-                    <style>
-                      <class name="text-label"/>
-                    </style>
-                  </object>
-                  <packing>
-                    <property name="left_attach">0</property>
-                    <property name="top_attach">0</property>
-                    <property name="width">2</property>
-                  </packing>
-                </child>
                 <child>
                   <object class="GtkLabel" id="text_word">
                     <property name="name">text-word</property>
@@ -436,6 +415,29 @@
                     <property name="width">2</property>
                   </packing>
                 </child>
+                <child>
+                  <object class="GtkLabel" id="text_left">
+                    <property name="visible">True</property>
+                    <property name="can_focus">False</property>
+                    <property name="halign">end</property>
+                    <property name="valign">center</property>
+                    <property name="margin_left">10</property>
+                    <property name="margin_right">5</property>
+                    <property name="label" translatable="yes">label</property>
+                    <property name="justify">right</property>
+                    <property name="wrap">True</property>
+                    <property name="ellipsize">start</property>
+                    <property name="lines">1</property>
+                    <style>
+                      <class name="text-label"/>
+                    </style>
+                  </object>
+                  <packing>
+                    <property name="left_attach">0</property>
+                    <property name="top_attach">0</property>
+                    <property name="width">2</property>
+                  </packing>
+                </child>
               </object>
               <packing>
                 <property name="resize">True</property>
@@ -446,7 +448,18 @@
           <packing>
             <property name="expand">False</property>
             <property name="fill">False</property>
-            <property name="padding">15</property>
+            <property name="padding">10</property>
+            <property name="position">5</property>
+          </packing>
+        </child>
+        <child>
+          <object class="GtkSeparator">
+            <property name="visible">True</property>
+            <property name="can_focus">False</property>
+          </object>
+          <packing>
+            <property name="expand">False</property>
+            <property name="fill">True</property>
             <property name="position">8</property>
           </packing>
         </child>
@@ -1048,6 +1061,7 @@
           <packing>
             <property name="expand">False</property>
             <property name="fill">False</property>
+            <property name="padding">10</property>
             <property name="position">9</property>
           </packing>
         </child>
