@@ -263,8 +263,8 @@ def click_button(btn):
             win2 = FileChooserWindow()
             if win.filename and win2.filename:
                 show_dialog_ok("Finally, type the query to find tokens in the center of the confusion. \
-                    Choose the attributes where we should look for confusions (between braces).\n\
-                    Default:\nword = \".*\" {id,word,lemma,upos,xpos,feats,dephead,deprel,deps,misc}", True)
+Choose the attributes where we should look for confusions (between braces).\n\
+Default:\nword = \".*\" {id,word,lemma,upos,xpos,feats,dephead,deprel,deps,misc}", True)
                 query = window.userEntry
                 if not query.strip():
                     query = ".*"
@@ -330,11 +330,11 @@ def click_button(btn):
 
     if button == "help":
         show_dialog_ok('Hotkeys:\n\n\
-    - Alt + S: Save any sentence modifications you have made (you still need to click "Save and Quit" to save your changes to the actual file).\nIn case it\'s a Git merge conflict file, note that the INCOMING chunk in the sentence will be discarded, so do not edit it.\n\
-    - Alt + N / P: Discard any unsaved solution to the current conflict and proceed / go back.\n\
-    - Alt + R: Copy all attributes for this token in conflict from the file in the right.\n\
-    - Alt + U: Find the next conflict you have yet not solved.\n\
-    - Alt + H: Open this help message.\n\
+- Alt + S: Save any sentence modifications you have made (you still need to click "Save and Quit" to save your changes to the actual file).\nIn case it\'s a Git merge conflict file, note that the INCOMING chunk in the sentence will be discarded, so do not edit it.\n\
+- Alt + N / P: Discard any unsaved solution to the current conflict and proceed / go back.\n\
+- Alt + R: Copy all attributes for this token in conflict from the file in the right.\n\
+- Alt + U: Find the next conflict you have yet not solved.\n\
+- Alt + H: Open this help message.\n\
                 ')
         return
 
@@ -387,7 +387,7 @@ def draw_tree(conllu):
     with RedirectedStdout() as out:
         doc = Document()
         data_filename = os.path.join(os.path.dirname(os.path.abspath(__file__)), conllu)
-        doc.load_conllu(data_filename)
+        doc.load_conllu([data_filename])
         root = doc.bundles[0].get_tree()
         root.draw(indent=4, color=False, attributes='form,upos,deprel',
                     print_sent_id=False, print_text=False, print_doc_meta=False)
