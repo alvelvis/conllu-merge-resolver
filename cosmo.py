@@ -306,9 +306,9 @@ def click_button(btn):
                     window.corpus2[i] = "\n".join(sentence)
         with open(window.filename, "w", encoding="utf-8") as f:
             f.write("\n\n".join(window.corpus))
-        if window.kind == "confusion":
-            with open(window.filename2, "w", encoding="utf-8") as f:
-                f.write("\n\n".join(window.corpus2))
+        #if window.kind == "confusion":
+            #with open(window.filename2, "w", encoding="utf-8") as f:
+                #f.write("\n\n".join(window.corpus2))
         show_dialog_ok("{} conflicts were solved and saved to \"{}\".".format(saved, window.filename))
         sys.exit()
 
