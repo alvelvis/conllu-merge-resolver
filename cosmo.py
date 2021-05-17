@@ -513,7 +513,9 @@ def conflicts_nav_changed(btn, row):
     pass
 
 def tree_zoom(btn):
-    objects['tree_viewer'].modify_font(Pango.FontDescription(str(btn.get_value())))
+    objects['tree_viewer'].modify_font(Pango.FontDescription("{} {}".format(
+        'Consolas',
+        btn.get_value())))
     window.config['tree_zoom'] = btn.get_value()
     save_config()
     return
