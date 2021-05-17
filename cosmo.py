@@ -1,10 +1,12 @@
+# -*- coding: utf-8 -*-
 import gi
 gi.require_version('Gtk', '3.0')
 gi.require_version('GtkSource', '3.0')
 gi.require_version('WebKit2', '4.0')
-from gi.repository import Gtk, Gdk, GtkSource, GObject, GLib, WebKit2
-from udapi.block.write.html import Html as udapi_tree
-from udapi.core.document import Document as udapi_document
+from gi.repository import Gtk, Gdk, GtkSource, GObject, GLib, WebKit2, Pango
+import udapi
+#from udapi.block.write.html import Html as udapi_tree
+#from udapi.core.document import Document as udapi_document
 import sys
 import os
 import subprocess
@@ -245,7 +247,7 @@ def goto_conflict(n):
     objects['conflicts_nav'].select_row(window.conflicts_nav_label[n])
     GLib.idle_add(window.conflicts_nav_label[n].grab_focus)
     objects['conflicts_nav'].show_all()
-    objects['main_notebook'].prev_page()
+    click_button(objects['sentence_button'])
     return
 
 def click_button(btn):
@@ -342,11 +344,35 @@ def click_button(btn):
         return
 
     if button == "tree_button":
-        objects['main_notebook'].next_page()
+        with open(os.path.dirname(os.path.abspath(__file__)) + "/sentence.conllu", "w") as f:
+            f.write(objects['sentence'].get_text(
+                objects['sentence'].get_start_iter(), 
+                objects['sentence'].get_end_iter(), 
+                True).strip() + "\n\n")
+        output = "\n".join(os.popen("udapy write.TextModeTrees indent=4 print_doc_meta=0 print_text=0 print_sent_id=0 hints=0 attributes=form,upos,deprel < '{}' | less -R".format(
+            os.path.dirname(os.path.abspath(__file__)) + "/sentence.conllu",
+            )).read().splitlines()[1:])
+        if not ' root' in output.splitlines()[0]:
+            output = output.split("    │", 1)[1]
+            output = ("────┮" + output).strip()
+        else:
+            output = output.split("   ╰", 1)[1]
+            output = ("─────" + output).strip()
+        objects['tree_viewer'].get_buffer().set_text(output)
+        os.remove(os.path.dirname(os.path.abspath(__file__)) + "/sentence.conllu")
+        objects['sentence_button'].get_style_context().remove_class("notebook-button-active")
+        objects['tree_button'].get_style_context().add_class("notebook-button-active")
+        objects['sentence_container'].hide()
+        objects['tree_container'].show()
+        objects['grid_cols'].hide()
         return
 
     if button == "sentence_button":
-        objects['main_notebook'].prev_page()
+        objects['sentence_button'].get_style_context().add_class("notebook-button-active")
+        objects['tree_button'].get_style_context().remove_class("notebook-button-active")
+        objects['sentence_container'].show()
+        objects['tree_container'].hide()
+        objects['grid_cols'].show()
         return
 
 def save_token_in_conflict(btn=None):
@@ -451,33 +477,8 @@ def conflicts_nav_changed(btn, row):
     goto_conflict(int(n))
     pass
 
-def change_notebook_page(btn, previous, page):
-    if page == 0:
-        objects['grid_cols'].show()
-        objects['tree_button'].get_style_context().remove_class("notebook-button-active")
-        objects['sentence_button'].get_style_context().add_class("notebook-button-active")
-    elif page == 1:
-        objects['grid_cols'].hide()
-        objects['tree_button'].get_style_context().add_class("notebook-button-active")
-        objects['sentence_button'].get_style_context().remove_class("notebook-button-active")
-        with open(os.path.dirname(os.path.abspath(__file__)) + "/sentence.conllu", "w") as f:
-            f.write(objects['sentence'].get_text(
-                objects['sentence'].get_start_iter(), 
-                objects['sentence'].get_end_iter(), 
-                True).strip() + "\n\n")
-        html = os.popen("udapy write.Html < '{}'".format(
-            os.path.dirname(os.path.abspath(__file__)) + "/sentence.conllu",
-        )).read()
-        objects['tree_viewer'].load_html(html.replace(
-            "</body>", '<script>$("svg").parent().parent().addClass("dragscroll").css("cursor", "grab")</script>\
-            \n<script type="text/javascript" src="https://cdn.rawgit.com/asvd/dragscroll/master/dragscroll.js"></script></body>'
-            ))
-        os.remove(os.path.dirname(os.path.abspath(__file__)) + "/sentence.conllu")
-    return
-
 def tree_zoom(btn):
-    objects['tree_viewer'].set_zoom_level(btn.get_value()/100)
-    objects['tree_viewer'].show_all()
+    objects['tree_viewer'].modify_font(Pango.FontDescription(str(btn.get_value())))
     window.config['tree_zoom'] = btn.get_value()
     save_config()
     return
@@ -493,7 +494,7 @@ Gtk.StyleContext.add_provider_for_screen(screen, provider, Gtk.STYLE_PROVIDER_PR
 
 buttons = "tree_button sentence_button copy_right help next_unsolved save_conflict open_git_file open_confusion \
     next_conflict previous_conflict save_changes"
-other_objects = "grid_cols tree_zoom main_notebook conflicts_nav font sentence_view filename filename2 \
+other_objects = "grid_cols tree_zoom sentence_container tree_container conflicts_nav font sentence_view filename filename2 \
     text_word text_left text_right conflicts this_conflict solved_conflicts unsolvable_conflicts \
     left_label right_label tree_viewer"
 cols = "id word lemma upos xpos feats dephead deprel deps misc"
@@ -519,7 +520,6 @@ objects['sentence'].create_tag('conflict', background="lightyellow")
 objects['sentence'].create_mark('conflict', objects['sentence'].get_start_iter())
 objects['font'].connect('font-set', font_changed)
 objects['conflicts_nav'].connect('row-activated', conflicts_nav_changed)
-objects['main_notebook'].connect('switch-page', change_notebook_page)
 objects['tree_zoom'].connect('value-changed', tree_zoom)
 
 window = builder.get_object("window1")
@@ -538,7 +538,8 @@ font_changed(objects['font'])
 
 objects['tree_zoom'].set_value(
     window.config.get(
-        'tree_zoom', 100))
+        'tree_zoom',
+        12 if 'win' in sys.platform else 10))
 
 if len(sys.argv) == 2:
     if not os.path.isfile(sys.argv[1]):
