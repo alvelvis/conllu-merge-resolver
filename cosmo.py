@@ -71,8 +71,8 @@ def load_file(kind, file, file2="", query=""):
     window.filename = file
     window.filename2 = file2
     window.solved = {}
-    objects['filename'].set_text(window.filename)
-    objects['filename2'].set_text(window.filename2)
+    objects['filename'].set_text(os.path.basename(window.filename))
+    objects['filename2'].set_text(os.path.basename(window.filename2))
     window.tokens = {}
     for i, sentence in enumerate(window.corpus):
         window.tokens[i] = {}
@@ -83,6 +83,7 @@ def load_file(kind, file, file2="", query=""):
     if not window.conflicts:
         show_dialog_ok("No conflicts were found.")
         sys.exit()
+    window.unsaved = True
     goto_conflict(0)
     return
 
@@ -95,13 +96,16 @@ def count_conflicts(query):
         important_cols = query.split("{")[1].split("}")[0] if '{' in query else ",".join(cols.split())
         query = query.replace("{{{}}}".format(important_cols), "").strip()
         important_cols = important_cols.replace(" ", "").split(",")
+        if not query:
+            query = ".*"
         if not '".*"' in query and query != '.*':
             confusions = interrogar_UD.main(window.filename, 5, query)['output']
         else:
             confusions = []
             for sentence in window.corpus:
                 if sentence.strip():
-                    confusions.append({'resultadoAnotado': estrutura_ud.Sentence(), 'resultadoEstruturado': estrutura_ud.Sentence()})
+                    confusions.append({'resultadoAnotado': estrutura_ud.Sentence(), 
+                        'resultadoEstruturado': estrutura_ud.Sentence()})
                     confusions[-1]['resultadoEstruturado'].build(sentence)
                     confusions[-1]['resultadoAnotado'].build(sentence)
                     for token in confusions[-1]['resultadoAnotado'].tokens:
@@ -191,6 +195,8 @@ def count_conflicts(query):
     window.conflicts_nav_label = {}
     window.token_in_conflict = ""
     position = 0
+    for child in objects['conflicts_nav'].get_children():
+        objects['conflicts_nav'].remove(child)
     for i in window.conflicts_each_i:
         if window.corpus[i].strip() and window.conflicts_each_i[i]:
             position += 1
@@ -209,6 +215,7 @@ def count_conflicts(query):
                 label.n = _n
                 objects['conflicts_nav'].insert(label, -1)
                 window.conflicts_nav_label[_n] = objects['conflicts_nav'].get_row_at_index(position-1)
+    objects['conflicts_nav'].show_all()
     objects['unsolvable_conflicts'].set_text("{} unsolvable conflicts".format(bad_conflicts))
     objects['conflicts'].set_text("{} conflicts".format(len(window.conflicts)))
     return
@@ -241,7 +248,6 @@ def goto_conflict(n):
     objects['right_label'].set_text('[ {} ]'.format(right_head))
     objects['conflicts_nav'].select_row(window.conflicts_nav_label[n])
     GLib.idle_add(window.conflicts_nav_label[n].grab_focus)
-    objects['conflicts_nav'].show_all()
     click_button(objects['sentence_button'])
     return
 
@@ -263,11 +269,11 @@ def click_button(btn):
             win2 = FileChooserWindow()
             if win.filename and win2.filename:
                 show_dialog_ok("Finally, type the query to find tokens in the center of the confusion. \
-Choose the attributes where we should look for confusions (between braces).\n\
+Choose the attributes where we should look for confusions (between braces).\n\n\
 Default:\nword = \".*\" {id,word,lemma,upos,xpos,feats,dephead,deprel,deps,misc}", True)
                 query = window.userEntry
                 if not query.strip():
-                    query = ".*"
+                    return
                 load_file("confusion", win.filename, win2.filename, query)
         return
 
@@ -306,9 +312,9 @@ Default:\nword = \".*\" {id,word,lemma,upos,xpos,feats,dephead,deprel,deps,misc}
                     window.corpus2[i] = "\n".join(sentence)
         with open(window.filename, "w", encoding="utf-8") as f:
             f.write("\n\n".join(window.corpus))
-        #if window.kind == "confusion":
-            #with open(window.filename2, "w", encoding="utf-8") as f:
-                #f.write("\n\n".join(window.corpus2))
+        if window.kind == "confusion":
+            with open(window.filename2, "w", encoding="utf-8") as f:
+                f.write("\n\n".join(window.corpus2))
         show_dialog_ok("{} conflicts were solved and saved to \"{}\".".format(saved, window.filename))
         sys.exit()
 
@@ -330,11 +336,11 @@ Default:\nword = \".*\" {id,word,lemma,upos,xpos,feats,dephead,deprel,deps,misc}
 
     if button == "help":
         show_dialog_ok('Hotkeys:\n\n\
-- Alt + S: Save any sentence modifications you have made (you still need to click "Save and Quit" to save your changes to the actual file).\nIn case it\'s a Git merge conflict file, note that the INCOMING chunk in the sentence will be discarded, so do not edit it.\n\
-- Alt + N / P: Discard any unsaved solution to the current conflict and proceed / go back.\n\
-- Alt + R: Copy all attributes for this token in conflict from the file in the right.\n\
-- Alt + U: Find the next conflict you have yet not solved.\n\
-- Alt + H: Open this help message.\n\
+    - Alt + S: Save any sentence modifications you have made (you still need to click "Save and Quit" to save your changes to the actual file).\nIn case it\'s a Git merge conflict file, note that the INCOMING chunk in the sentence will be discarded, so do not edit it.\n\
+    - Alt + N / P: Discard any unsaved solution to the current conflict and proceed / go back.\n\
+    - Alt + R: Copy all attributes for this token in conflict from the file in the right.\n\
+    - Alt + U: Find the next conflict you have yet not solved.\n\
+    - Alt + H: Open this help message.\n\
                 ')
         return
 
@@ -501,6 +507,20 @@ def font_changed(btn):
     save_config()
     return
 
+def label_font_changed(btn):
+    font_description = btn.get_font_desc()
+    font = btn.get_font()
+    objects['text_left'].modify_font(font_description)
+    objects['text_right'].modify_font(font_description)
+    objects['text_word'].modify_font(Pango.FontDescription("{} {} {}".format(
+        font.rsplit(" ", 1)[0],
+        'Bold',
+        font.rsplit(" ", 1)[1]
+    )))
+    window.config['label_font'] = font
+    save_config()
+    return
+
 def save_config():
     with open(config_path, "w") as f:
         json.dump(window.config, f)
@@ -530,7 +550,7 @@ Gtk.StyleContext.add_provider_for_screen(screen, provider, Gtk.STYLE_PROVIDER_PR
 
 buttons = "tree_button sentence_button copy_right help next_unsolved save_conflict open_git_file open_confusion \
     next_conflict previous_conflict save_changes"
-other_objects = "grid_cols tree_zoom sentence_container tree_container conflicts_nav font sentence_view filename filename2 \
+other_objects = "label_font label_container grid_cols tree_zoom sentence_container tree_container conflicts_nav font sentence_view filename filename2 \
     text_word text_left text_right conflicts this_conflict solved_conflicts unsolvable_conflicts \
     left_label right_label tree_viewer"
 cols = "id word lemma upos xpos feats dephead deprel deps misc"
@@ -555,6 +575,7 @@ objects['sentence'].connect('changed', sentence_changed)
 objects['sentence'].create_tag('conflict', background="lightyellow")
 objects['sentence'].create_mark('conflict', objects['sentence'].get_start_iter())
 objects['font'].connect('font-set', font_changed)
+objects['label_font'].connect('font-set', label_font_changed)
 objects['conflicts_nav'].connect('row-activated', conflicts_nav_changed)
 objects['tree_zoom'].connect('value-changed', tree_zoom)
 
@@ -569,13 +590,19 @@ if os.path.isfile(config_path):
 objects['font'].set_font(
     window.config.get(
         'font', 
-        "Courier New 12" if "win" in sys.platform else "Monospace 10"))
+        "Courier New 10" if "win" in sys.platform else "Monospace 10"))
 font_changed(objects['font'])
 
 objects['tree_zoom'].set_value(
     window.config.get(
         'tree_zoom',
-        12 if 'win' in sys.platform else 10))
+        10 if 'win' in sys.platform else 10))
+
+objects['label_font'].set_font(
+    window.config.get(
+        'label_font',
+        'Open Sans 12' if 'win' in sys.platform else "Open Sans 12"))
+label_font_changed(objects['label_font'])
 
 if len(sys.argv) == 2:
     if not os.path.isfile(sys.argv[1]):
@@ -591,6 +618,14 @@ if len(sys.argv) > 2:
         sys.exit()
     load_file("confusion", sys.argv[1], sys.argv[2], sys.argv[3] if len(sys.argv) == 4 else ".*")
 
+def on_close(x, y):
+    if window.__dict__.get('unsaved'):
+        show_dialog_ok('Are you sure you do not want to save any changes to the file?\nQuit again if you are sure.')
+        window.unsaved = False
+        return True
+    Gtk.main_quit()
+
+window.connect('delete_event', on_close)
 window.connect("destroy", Gtk.main_quit)
 window.show_all()
 

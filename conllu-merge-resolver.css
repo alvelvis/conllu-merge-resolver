@@ -6,30 +6,18 @@
     background: lightgrey;
 }
 
-.text-label {
-    font-size: 14px;
-}
-
 .conflict label {
     color: red;
     font-weight: bold;
 }
 
-#save-conflict {
-    background: #B2F77D;
-}
-
-.conflict-solved {
-    background: #B2F77D;
-}
-
-.solved {
+.solved label {
     color: green;
     font-weight: bold;
 }
 
-#text-word {
-    font-weight: bold;
+#save-conflict {
+    background: #B2F77D;
 }
 
 .colbutton {

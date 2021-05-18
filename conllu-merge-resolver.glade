@@ -326,8 +326,6 @@
                 <property name="visible">True</property>
                 <property name="can_focus">True</property>
                 <property name="receives_default">True</property>
-                <property name="margin_left">10</property>
-                <property name="margin_right">10</property>
                 <property name="use_underline">True</property>
                 <style>
                   <class name="colbutton"/>
@@ -392,7 +390,7 @@
           </packing>
         </child>
         <child>
-          <object class="GtkPaned">
+          <object class="GtkPaned" id="label_container">
             <property name="visible">True</property>
             <property name="can_focus">True</property>
             <property name="position_set">True</property>
@@ -1104,6 +1102,8 @@
               <object class="GtkGrid">
                 <property name="visible">True</property>
                 <property name="can_focus">False</property>
+                <property name="margin_left">5</property>
+                <property name="margin_right">5</property>
                 <property name="margin_top">5</property>
                 <property name="margin_bottom">5</property>
                 <child>
@@ -1130,11 +1130,48 @@
                         <property name="visible">True</property>
                         <property name="can_focus">False</property>
                         <property name="margin_left">10</property>
-                        <property name="label" translatable="yes">Font: </property>
+                        <property name="label" translatable="yes"> Annotation font: </property>
                         <property name="justify">right</property>
                       </object>
                       <packing>
                         <property name="left_attach">0</property>
+                        <property name="top_attach">0</property>
+                      </packing>
+                    </child>
+                  </object>
+                  <packing>
+                    <property name="left_attach">1</property>
+                    <property name="top_attach">0</property>
+                  </packing>
+                </child>
+                <child>
+                  <object class="GtkGrid">
+                    <property name="visible">True</property>
+                    <property name="can_focus">False</property>
+                    <child>
+                      <object class="GtkLabel">
+                        <property name="visible">True</property>
+                        <property name="can_focus">False</property>
+                        <property name="label" translatable="yes"> Text font: </property>
+                        <property name="justify">right</property>
+                      </object>
+                      <packing>
+                        <property name="left_attach">0</property>
+                        <property name="top_attach">0</property>
+                      </packing>
+                    </child>
+                    <child>
+                      <object class="GtkFontButton" id="label_font">
+                        <property name="visible">True</property>
+                        <property name="can_focus">True</property>
+                        <property name="receives_default">True</property>
+                        <property name="font">Sans 12</property>
+                        <property name="preview_text">I love Linguistics.</property>
+                        <property name="title" translatable="yes">Select a font</property>
+                        <property name="use_font">True</property>
+                      </object>
+                      <packing>
+                        <property name="left_attach">1</property>
                         <property name="top_attach">0</property>
                       </packing>
                     </child>
@@ -1153,7 +1190,7 @@
                         <property name="visible">True</property>
                         <property name="can_focus">False</property>
                         <property name="margin_left">10</property>
-                        <property name="label" translatable="yes">Tree zoom: </property>
+                        <property name="label" translatable="yes"> Tree font: </property>
                         <property name="justify">right</property>
                       </object>
                       <packing>
@@ -1175,7 +1212,7 @@
                     </child>
                   </object>
                   <packing>
-                    <property name="left_attach">1</property>
+                    <property name="left_attach">2</property>
                     <property name="top_attach">0</property>
                   </packing>
                 </child>
