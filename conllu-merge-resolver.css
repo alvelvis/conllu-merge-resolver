@@ -6,6 +6,14 @@
     background: lightgrey;
 }
 
+.text-conflict {
+    background-color: lightyellow;
+}
+
+.text-solved {
+    background-color: #B2F77D;
+}
+
 .conflict label {
     color: red;
     font-weight: bold;
@@ -16,11 +24,11 @@
     font-weight: bold;
 }
 
-#save-conflict {
+.save-conflict {
     background: #B2F77D;
 }
 
 .colbutton {
-    padding: 0px 5px 0px 5px;
-    margin: 1px 1px;
+   padding: 1px;
+   margin: 1px 1px;
 }

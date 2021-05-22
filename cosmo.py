@@ -61,12 +61,12 @@ def load_file(kind, file, file2="", query=""):
             sys.exit()
         window.kind = "git"
     window.corpus = text.split("\n\n")
-    window.corpus_i = {x.split("# sent_id = ")[1].split("\n")[0]: i for i, x in enumerate(window.corpus) if x.strip()}
+    window.corpus_i = {x.split("# sent_id = ")[1].split("\n")[0]: i for i, x in enumerate(window.corpus) if x.strip() and '# sent_id = ' in window.corpus[i]}
     if kind == "confusion":
         with open(file2, encoding="utf-8") as f:
             text2 = f.read()
         window.corpus2 = text2.split("\n\n")
-        window.corpus2_i = {x.split("# sent_id = ")[1].split("\n")[0]: i for i, x in enumerate(window.corpus2) if x.strip()}
+        window.corpus2_i = {x.split("# sent_id = ")[1].split("\n")[0]: i for i, x in enumerate(window.corpus2) if x.strip() and '# sent_id = ' in window.corpus2[i]}
         window.kind = "confusion"
     window.filename = file
     window.filename2 = file2
@@ -248,6 +248,13 @@ def goto_conflict(n):
     objects['right_label'].set_text('[ {} ]'.format(right_head))
     objects['conflicts_nav'].select_row(window.conflicts_nav_label[n])
     GLib.idle_add(window.conflicts_nav_label[n].grab_focus)
+    objects['save_conflict'].get_style_context().remove_class("save-conflict")
+    objects['text_word'].get_style_context().remove_class("text-conflict")
+    objects['text_word'].get_style_context().remove_class("text-solved")
+    if not n in window.solved:
+        objects['text_word'].get_style_context().add_class("text-conflict")
+    else:
+        objects['text_word'].get_style_context().add_class("text-solved")
     click_button(objects['sentence_button'])
     return
 
@@ -310,10 +317,10 @@ Default:\nword = \".*\" {id,word,lemma,upos,xpos,feats,dephead,deprel,deps,misc}
                     for n in reversed(window.conflicts_l[l]):
                         sentence.insert(start, window.solved[n])
                     window.corpus2[i] = "\n".join(sentence)
-        with open(window.filename, "w", encoding="utf-8") as f:
+        with open(window.filename, "w", encoding="utf-8", newline="") as f:
             f.write("\n\n".join(window.corpus))
         if window.kind == "confusion":
-            with open(window.filename2, "w", encoding="utf-8") as f:
+            with open(window.filename2, "w", encoding="utf-8", newline="") as f:
                 f.write("\n\n".join(window.corpus2))
         show_dialog_ok("{} conflicts were solved and saved to \"{}\".".format(saved, window.filename))
         sys.exit()
@@ -395,7 +402,7 @@ def draw_tree(conllu):
         data_filename = os.path.join(os.path.dirname(os.path.abspath(__file__)), conllu)
         doc.load_conllu([data_filename])
         root = doc.bundles[0].get_tree()
-        root.draw(indent=4, color=False, attributes='form,upos,deprel',
+        root.draw(indent=4, color=False, attributes='form',
                     print_sent_id=False, print_text=False, print_doc_meta=False)
         s = str(out)
     return s
@@ -449,6 +456,7 @@ def change_col(btn):
     return
 
 def sentence_changed(textbuffer):
+    objects['save_conflict'].get_style_context().add_class("save-conflict")
     for l, line in enumerate(
         textbuffer.get_text(textbuffer.get_start_iter(), textbuffer.get_end_iter(), True).splitlines()):
         if line.count("\t") == 9 and line.split("\t")[0] == window.token_in_conflict.split("\t")[0]:
@@ -459,6 +467,9 @@ def sentence_changed(textbuffer):
     return
 
 def token_in_conflict_changed():
+    objects['save_conflict'].get_style_context().add_class("save-conflict")
+    objects['text_word'].get_style_context().remove_class("text-conflict")
+    objects['text_word'].get_style_context().remove_class("text-solved")
     sentence_text = objects['sentence'].get_text(
         objects['sentence'].get_start_iter(), objects['sentence'].get_end_iter(), False).splitlines()
     for l, line in enumerate(sentence_text):
@@ -601,7 +612,7 @@ objects['tree_zoom'].set_value(
 objects['label_font'].set_font(
     window.config.get(
         'label_font',
-        'Open Sans 12' if 'win' in sys.platform else "Open Sans 12"))
+        'Arial 12' if 'win' in sys.platform else "Open Sans 12"))
 label_font_changed(objects['label_font'])
 
 if len(sys.argv) == 2:
