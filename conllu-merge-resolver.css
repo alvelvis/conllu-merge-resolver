@@ -7,11 +7,11 @@
 }
 
 .text-conflict {
-    background-color: lightyellow;
+    background: lightyellow;
 }
 
 .text-solved {
-    background-color: #B2F77D;
+    background: #B2F77D;
 }
 
 .conflict label {
@@ -29,6 +29,6 @@
 }
 
 .colbutton {
-   padding: 1px;
+   padding: 4px 4px;
    margin: 1px 1px;
 }

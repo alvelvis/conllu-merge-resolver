@@ -229,7 +229,7 @@ def goto_conflict(n):
     text_word = window.conflicts[n]['incoming'].split("\t")[1]
     text_left = [y for x, y in window.tokens[window.conflicts_i[n]].items() if not '-' in x and int(x) < int(text_word_id)] if not '-' in text_word_id else ""
     text_right = [y for x, y in window.tokens[window.conflicts_i[n]].items() if not '-' in x and int(x) > int(text_word_id)] if not '-' in text_word_id else ""
-    objects['text_word'].set_text(text_word)
+    objects['text_word'].set_label(text_word)
     objects['text_left'].set_text(" ".join(text_left))
     objects['text_right'].set_text(" ".join(text_right))
     if window.kind == "git":
@@ -244,8 +244,8 @@ def goto_conflict(n):
             break
     left_head = window.tokens[window.conflicts_i[n]].get(window.conflicts[n]['head'].split("\t")[6], "None")
     right_head = window.tokens[window.conflicts_i[n]].get(window.conflicts[n]['incoming'].split("\t")[6], "None")
-    objects['left_label'].set_text('[ {} ]'.format(left_head))
-    objects['right_label'].set_text('[ {} ]'.format(right_head))
+    objects['left_label'].set_text('head [ {} ]'.format(left_head))
+    objects['right_label'].set_text('[ {} ] head'.format(right_head))
     objects['conflicts_nav'].select_row(window.conflicts_nav_label[n])
     GLib.idle_add(window.conflicts_nav_label[n].grab_focus)
     objects['save_conflict'].get_style_context().remove_class("save-conflict")
@@ -261,6 +261,15 @@ def goto_conflict(n):
 def click_button(btn):
     button = Gtk.Buildable.get_name(btn)
     
+    if button == "text_word":
+        objects['sentence_container'].show()
+        objects['tree_container'].hide()
+        if objects['grid_cols'].props.visible:
+            objects['grid_cols'].hide()
+        else:
+            objects['grid_cols'].show()
+        return
+
     if button == "open_git_file":
         win = FileChooserWindow()
         if win.filename:
@@ -523,9 +532,9 @@ def label_font_changed(btn):
     font = btn.get_font()
     objects['text_left'].modify_font(font_description)
     objects['text_right'].modify_font(font_description)
-    objects['text_word'].modify_font(Pango.FontDescription("{} {} {}".format(
+    objects['text_word'].modify_font(Pango.FontDescription("{} {}".format(
         font.rsplit(" ", 1)[0],
-        'Bold',
+        #'Bold',
         font.rsplit(" ", 1)[1]
     )))
     window.config['label_font'] = font
@@ -559,10 +568,13 @@ provider = Gtk.CssProvider()
 provider.load_from_path(os.path.dirname(os.path.abspath(__file__)) + "/conllu-merge-resolver.css")
 Gtk.StyleContext.add_provider_for_screen(screen, provider, Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION)
 
-buttons = "tree_button sentence_button copy_right help next_unsolved save_conflict open_git_file open_confusion \
+settings = Gtk.Settings.get_default()
+settings.set_property("gtk-application-prefer-dark-theme", False)  # if you want use dark theme, set second arg to True
+
+buttons = "text_word tree_button sentence_button copy_right help next_unsolved save_conflict open_git_file open_confusion \
     next_conflict previous_conflict save_changes"
 other_objects = "label_font label_container grid_cols tree_zoom sentence_container tree_container conflicts_nav font sentence_view filename filename2 \
-    text_word text_left text_right conflicts this_conflict solved_conflicts unsolvable_conflicts \
+    text_left text_right conflicts this_conflict solved_conflicts unsolvable_conflicts \
     left_label right_label tree_viewer"
 cols = "id word lemma upos xpos feats dephead deprel deps misc"
 
@@ -631,7 +643,7 @@ if len(sys.argv) > 2:
 
 def on_close(x, y):
     if window.__dict__.get('unsaved'):
-        show_dialog_ok('Are you sure you do not want to save any changes to the file?\nQuit again if you are sure.')
+        show_dialog_ok('Are you sure you do not want to save any changes to the file?\nQuit again when you are sure.')
         window.unsaved = False
         return True
     Gtk.main_quit()
