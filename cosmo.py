@@ -348,7 +348,7 @@ Default:\nword = \".*\" {id,word,lemma,upos,xpos,feats,dephead,deprel,deps,misc}
     if button == "help":
         show_dialog_ok('Hotkeys:\n\n\
     - Alt + S: Save any sentence modifications you have made (you still need to click "Save and Quit" to save your changes to the actual file).\nIn case it\'s a Git merge conflict file, note that the INCOMING chunk in the sentence will be discarded, so do not edit it.\n\
-    - Alt + N / P: Discard any unsaved solution to the current conflict and proceed / go back.\n\
+    - Alt + Left / Right: Discard any unsaved solution to the current conflict and proceed / go back.\n\
     - Alt + R: Copy all attributes for this token in conflict from the file in the right.\n\
     - Alt + U: Find the next conflict you have yet not solved.\n\
     - Alt + H: Open this help message.\n\

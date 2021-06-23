@@ -240,40 +240,6 @@
             <property name="margin_right">10</property>
             <property name="column_homogeneous">True</property>
             <child>
-              <object class="GtkButton" id="previous_conflict">
-                <property name="label" translatable="yes">&lt;&lt; _Previous conflict</property>
-                <property name="visible">True</property>
-                <property name="can_focus">True</property>
-                <property name="receives_default">True</property>
-                <property name="relief">none</property>
-                <property name="use_underline">True</property>
-                <style>
-                  <class name="colbutton"/>
-                </style>
-              </object>
-              <packing>
-                <property name="left_attach">0</property>
-                <property name="top_attach">0</property>
-              </packing>
-            </child>
-            <child>
-              <object class="GtkButton" id="next_conflict">
-                <property name="label" translatable="yes">_Next conflict &gt;&gt;</property>
-                <property name="visible">True</property>
-                <property name="can_focus">True</property>
-                <property name="receives_default">True</property>
-                <property name="relief">none</property>
-                <property name="use_underline">True</property>
-                <style>
-                  <class name="colbutton"/>
-                </style>
-              </object>
-              <packing>
-                <property name="left_attach">1</property>
-                <property name="top_attach">0</property>
-              </packing>
-            </child>
-            <child>
               <object class="GtkButton" id="copy_right">
                 <property name="label" translatable="yes">Copy from _Right</property>
                 <property name="visible">True</property>
@@ -286,7 +252,7 @@
                 </style>
               </object>
               <packing>
-                <property name="left_attach">2</property>
+                <property name="left_attach">1</property>
                 <property name="top_attach">0</property>
               </packing>
             </child>
@@ -303,7 +269,7 @@
                 </style>
               </object>
               <packing>
-                <property name="left_attach">3</property>
+                <property name="left_attach">2</property>
                 <property name="top_attach">0</property>
               </packing>
             </child>
@@ -320,40 +286,96 @@
                 </style>
               </object>
               <packing>
+                <property name="left_attach">3</property>
+                <property name="top_attach">0</property>
+              </packing>
+            </child>
+            <child>
+              <object class="GtkGrid">
+                <property name="visible">True</property>
+                <property name="can_focus">False</property>
+                <property name="column_homogeneous">True</property>
+                <child>
+                  <object class="GtkButton" id="sentence_button">
+                    <property name="label" translatable="yes">Sentence</property>
+                    <property name="visible">True</property>
+                    <property name="can_focus">True</property>
+                    <property name="receives_default">True</property>
+                    <property name="tooltip_text" translatable="yes">Display sentence annotation; click to maximize</property>
+                    <property name="relief">none</property>
+                    <style>
+                      <class name="notebook-button-active"/>
+                      <class name="colbutton"/>
+                    </style>
+                  </object>
+                  <packing>
+                    <property name="left_attach">0</property>
+                    <property name="top_attach">0</property>
+                  </packing>
+                </child>
+                <child>
+                  <object class="GtkButton" id="tree_button">
+                    <property name="label" translatable="yes">Tree</property>
+                    <property name="visible">True</property>
+                    <property name="can_focus">True</property>
+                    <property name="receives_default">True</property>
+                    <property name="tooltip_text" translatable="yes">Tree visualization for this sentence</property>
+                    <property name="relief">none</property>
+                    <style>
+                      <class name="colbutton"/>
+                    </style>
+                  </object>
+                  <packing>
+                    <property name="left_attach">1</property>
+                    <property name="top_attach">0</property>
+                  </packing>
+                </child>
+              </object>
+              <packing>
                 <property name="left_attach">4</property>
                 <property name="top_attach">0</property>
               </packing>
             </child>
             <child>
-              <object class="GtkButton" id="sentence_button">
-                <property name="label" translatable="yes">Sentence</property>
+              <object class="GtkGrid">
                 <property name="visible">True</property>
-                <property name="can_focus">True</property>
-                <property name="receives_default">True</property>
-                <property name="relief">none</property>
-                <style>
-                  <class name="notebook-button-active"/>
-                  <class name="colbutton"/>
-                </style>
+                <property name="can_focus">False</property>
+                <property name="column_homogeneous">True</property>
+                <child>
+                  <object class="GtkButton" id="previous_conflict">
+                    <property name="label" translatable="yes">&lt;&lt;</property>
+                    <property name="visible">True</property>
+                    <property name="can_focus">True</property>
+                    <property name="receives_default">True</property>
+                    <property name="relief">none</property>
+                    <style>
+                      <class name="colbutton"/>
+                    </style>
+                  </object>
+                  <packing>
+                    <property name="left_attach">0</property>
+                    <property name="top_attach">0</property>
+                  </packing>
+                </child>
+                <child>
+                  <object class="GtkButton" id="next_conflict">
+                    <property name="label" translatable="yes">&gt;&gt;</property>
+                    <property name="visible">True</property>
+                    <property name="can_focus">True</property>
+                    <property name="receives_default">True</property>
+                    <property name="relief">none</property>
+                    <style>
+                      <class name="colbutton"/>
+                    </style>
+                  </object>
+                  <packing>
+                    <property name="left_attach">1</property>
+                    <property name="top_attach">0</property>
+                  </packing>
+                </child>
               </object>
               <packing>
-                <property name="left_attach">5</property>
-                <property name="top_attach">0</property>
-              </packing>
-            </child>
-            <child>
-              <object class="GtkButton" id="tree_button">
-                <property name="label" translatable="yes">Tree</property>
-                <property name="visible">True</property>
-                <property name="can_focus">True</property>
-                <property name="receives_default">True</property>
-                <property name="relief">none</property>
-                <style>
-                  <class name="colbutton"/>
-                </style>
-              </object>
-              <packing>
-                <property name="left_attach">6</property>
+                <property name="left_attach">0</property>
                 <property name="top_attach">0</property>
               </packing>
             </child>
@@ -442,7 +464,6 @@
                     <property name="visible">True</property>
                     <property name="can_focus">True</property>
                     <property name="receives_default">True</property>
-                    <property name="tooltip_text" translatable="yes">Click to maximize sentence annotation</property>
                     <property name="relief">none</property>
                   </object>
                   <packing>
