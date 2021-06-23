@@ -255,21 +255,16 @@ def goto_conflict(n):
         objects['text_word'].get_style_context().add_class("text-conflict")
     else:
         objects['text_word'].get_style_context().add_class("text-solved")
-    click_button(objects['sentence_button'])
+    objects['sentence_button'].get_style_context().add_class("notebook-button-active")
+    objects['tree_button'].get_style_context().remove_class("notebook-button-active")
+    objects['sentence_container'].show()
+    objects['grid_cols'].show()
+    objects['tree_container'].hide()
     return
 
 def click_button(btn):
     button = Gtk.Buildable.get_name(btn)
     
-    if button == "text_word":
-        objects['sentence_container'].show()
-        objects['tree_container'].hide()
-        if objects['grid_cols'].props.visible:
-            objects['grid_cols'].hide()
-        else:
-            objects['grid_cols'].show()
-        return
-
     if button == "open_git_file":
         win = FileChooserWindow()
         if win.filename:
@@ -400,8 +395,14 @@ Default:\nword = \".*\" {id,word,lemma,upos,xpos,feats,dephead,deprel,deps,misc}
         objects['sentence_button'].get_style_context().add_class("notebook-button-active")
         objects['tree_button'].get_style_context().remove_class("notebook-button-active")
         objects['sentence_container'].show()
+        if objects['tree_container'].props.visible:
+            objects['grid_cols'].show()
+        else:
+            if objects['grid_cols'].props.visible:
+                objects['grid_cols'].hide()
+            else:
+                objects['grid_cols'].show()
         objects['tree_container'].hide()
-        objects['grid_cols'].show()
         return
 
 def draw_tree(conllu):
@@ -642,7 +643,7 @@ if len(sys.argv) > 2:
     load_file("confusion", sys.argv[1], sys.argv[2], sys.argv[3] if len(sys.argv) == 4 else ".*")
 
 def on_close(x, y):
-    if window.__dict__.get('unsaved'):
+    if window.__dict__.get('unsaved') and window.solved:
         show_dialog_ok('Are you sure you do not want to save any changes to the file?\nQuit again when you are sure.')
         window.unsaved = False
         return True

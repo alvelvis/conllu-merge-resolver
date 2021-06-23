@@ -158,52 +158,6 @@
                   <object class="GtkGrid">
                     <property name="visible">True</property>
                     <property name="can_focus">False</property>
-                    <property name="margin_bottom">5</property>
-                    <property name="column_spacing">2</property>
-                    <property name="column_homogeneous">True</property>
-                    <child>
-                      <object class="GtkButton" id="tree_button">
-                        <property name="label" translatable="yes">Tree</property>
-                        <property name="visible">True</property>
-                        <property name="can_focus">True</property>
-                        <property name="receives_default">True</property>
-                        <property name="relief">none</property>
-                        <style>
-                          <class name="colbutton"/>
-                        </style>
-                      </object>
-                      <packing>
-                        <property name="left_attach">1</property>
-                        <property name="top_attach">0</property>
-                      </packing>
-                    </child>
-                    <child>
-                      <object class="GtkButton" id="sentence_button">
-                        <property name="label" translatable="yes">Sentence</property>
-                        <property name="visible">True</property>
-                        <property name="can_focus">True</property>
-                        <property name="receives_default">True</property>
-                        <property name="relief">none</property>
-                        <style>
-                          <class name="notebook-button-active"/>
-                          <class name="colbutton"/>
-                        </style>
-                      </object>
-                      <packing>
-                        <property name="left_attach">0</property>
-                        <property name="top_attach">0</property>
-                      </packing>
-                    </child>
-                  </object>
-                  <packing>
-                    <property name="left_attach">0</property>
-                    <property name="top_attach">0</property>
-                  </packing>
-                </child>
-                <child>
-                  <object class="GtkGrid">
-                    <property name="visible">True</property>
-                    <property name="can_focus">False</property>
                     <child>
                       <object class="GtkScrolledWindow" id="tree_container">
                         <property name="can_focus">True</property>
@@ -262,7 +216,7 @@
                   </object>
                   <packing>
                     <property name="left_attach">0</property>
-                    <property name="top_attach">1</property>
+                    <property name="top_attach">0</property>
                   </packing>
                 </child>
               </object>
@@ -320,12 +274,12 @@
               </packing>
             </child>
             <child>
-              <object class="GtkButton" id="save_conflict">
-                <property name="label" translatable="yes">_Save (Alt+S)</property>
-                <property name="name">save-conflict</property>
+              <object class="GtkButton" id="copy_right">
+                <property name="label" translatable="yes">Copy from _Right</property>
                 <property name="visible">True</property>
                 <property name="can_focus">True</property>
                 <property name="receives_default">True</property>
+                <property name="relief">none</property>
                 <property name="use_underline">True</property>
                 <style>
                   <class name="colbutton"/>
@@ -337,12 +291,12 @@
               </packing>
             </child>
             <child>
-              <object class="GtkButton" id="copy_right">
-                <property name="label" translatable="yes">Copy from _Right</property>
+              <object class="GtkButton" id="save_conflict">
+                <property name="label" translatable="yes">_Save (Alt+S)</property>
+                <property name="name">save-conflict</property>
                 <property name="visible">True</property>
                 <property name="can_focus">True</property>
                 <property name="receives_default">True</property>
-                <property name="relief">none</property>
                 <property name="use_underline">True</property>
                 <style>
                   <class name="colbutton"/>
@@ -367,6 +321,39 @@
               </object>
               <packing>
                 <property name="left_attach">4</property>
+                <property name="top_attach">0</property>
+              </packing>
+            </child>
+            <child>
+              <object class="GtkButton" id="sentence_button">
+                <property name="label" translatable="yes">Sentence</property>
+                <property name="visible">True</property>
+                <property name="can_focus">True</property>
+                <property name="receives_default">True</property>
+                <property name="relief">none</property>
+                <style>
+                  <class name="notebook-button-active"/>
+                  <class name="colbutton"/>
+                </style>
+              </object>
+              <packing>
+                <property name="left_attach">5</property>
+                <property name="top_attach">0</property>
+              </packing>
+            </child>
+            <child>
+              <object class="GtkButton" id="tree_button">
+                <property name="label" translatable="yes">Tree</property>
+                <property name="visible">True</property>
+                <property name="can_focus">True</property>
+                <property name="receives_default">True</property>
+                <property name="relief">none</property>
+                <style>
+                  <class name="colbutton"/>
+                </style>
+              </object>
+              <packing>
+                <property name="left_attach">6</property>
                 <property name="top_attach">0</property>
               </packing>
             </child>
