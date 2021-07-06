@@ -246,7 +246,6 @@
                 <property name="visible">True</property>
                 <property name="can_focus">True</property>
                 <property name="receives_default">True</property>
-                <property name="tooltip_text" translatable="yes">Save the solution to this conflict</property>
                 <property name="use_underline">True</property>
                 <style>
                   <class name="colbutton"/>
@@ -304,59 +303,11 @@
               </packing>
             </child>
             <child>
-              <object class="GtkGrid">
-                <property name="visible">True</property>
-                <property name="can_focus">False</property>
-                <property name="column_homogeneous">True</property>
-                <child>
-                  <object class="GtkButton" id="previous_conflict">
-                    <property name="label" translatable="yes">&lt;&lt;</property>
-                    <property name="visible">True</property>
-                    <property name="can_focus">True</property>
-                    <property name="receives_default">True</property>
-                    <property name="tooltip_text" translatable="yes">Go to previous conflict (Alft+Left)</property>
-                    <property name="relief">none</property>
-                    <accelerator key="Left" signal="clicked" modifiers="GDK_MOD1_MASK"/>
-                    <style>
-                      <class name="colbutton"/>
-                    </style>
-                  </object>
-                  <packing>
-                    <property name="left_attach">0</property>
-                    <property name="top_attach">0</property>
-                  </packing>
-                </child>
-                <child>
-                  <object class="GtkButton" id="next_conflict">
-                    <property name="label" translatable="yes">&gt;&gt;</property>
-                    <property name="visible">True</property>
-                    <property name="can_focus">True</property>
-                    <property name="receives_default">True</property>
-                    <property name="tooltip_text" translatable="yes">Go to next conflict (Alt+Right)</property>
-                    <property name="relief">none</property>
-                    <accelerator key="Right" signal="clicked" modifiers="GDK_MOD1_MASK"/>
-                    <style>
-                      <class name="colbutton"/>
-                    </style>
-                  </object>
-                  <packing>
-                    <property name="left_attach">1</property>
-                    <property name="top_attach">0</property>
-                  </packing>
-                </child>
-              </object>
-              <packing>
-                <property name="left_attach">0</property>
-                <property name="top_attach">0</property>
-              </packing>
-            </child>
-            <child>
               <object class="GtkButton" id="copy_right">
                 <property name="label" translatable="yes">Copy from _Right</property>
                 <property name="visible">True</property>
                 <property name="can_focus">True</property>
                 <property name="receives_default">True</property>
-                <property name="tooltip_text" translatable="yes">Copy all attributes from right columns (Alt+R)</property>
                 <property name="relief">none</property>
                 <property name="use_underline">True</property>
                 <style>
@@ -374,12 +325,56 @@
                 <property name="visible">True</property>
                 <property name="can_focus">True</property>
                 <property name="receives_default">True</property>
-                <property name="tooltip_text" translatable="yes">Find next conflict unsolved (Alt+U)</property>
                 <property name="relief">none</property>
                 <property name="use_underline">True</property>
                 <style>
                   <class name="colbutton"/>
                 </style>
+              </object>
+              <packing>
+                <property name="left_attach">0</property>
+                <property name="top_attach">0</property>
+              </packing>
+            </child>
+            <child>
+              <object class="GtkGrid">
+                <property name="visible">True</property>
+                <property name="can_focus">False</property>
+                <property name="column_homogeneous">True</property>
+                <child>
+                  <object class="GtkButton" id="previous_conflict">
+                    <property name="label" translatable="yes">&lt;&lt;</property>
+                    <property name="visible">True</property>
+                    <property name="can_focus">True</property>
+                    <property name="receives_default">True</property>
+                    <property name="relief">none</property>
+                    <accelerator key="Left" signal="clicked" modifiers="GDK_MOD1_MASK"/>
+                    <style>
+                      <class name="colbutton"/>
+                    </style>
+                  </object>
+                  <packing>
+                    <property name="left_attach">0</property>
+                    <property name="top_attach">0</property>
+                  </packing>
+                </child>
+                <child>
+                  <object class="GtkButton" id="next_conflict">
+                    <property name="label" translatable="yes">&gt;&gt;</property>
+                    <property name="visible">True</property>
+                    <property name="can_focus">True</property>
+                    <property name="receives_default">True</property>
+                    <property name="relief">none</property>
+                    <accelerator key="Right" signal="clicked" modifiers="GDK_MOD1_MASK"/>
+                    <style>
+                      <class name="colbutton"/>
+                    </style>
+                  </object>
+                  <packing>
+                    <property name="left_attach">1</property>
+                    <property name="top_attach">0</property>
+                  </packing>
+                </child>
               </object>
               <packing>
                 <property name="left_attach">1</property>

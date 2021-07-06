@@ -288,6 +288,10 @@ Default:\nword = \".*\" {id,word,lemma,upos,xpos,feats,dephead,deprel,deps,misc}
                 load_file("confusion", win.filename, win2.filename, query)
         return
 
+    if button in ["next_conflict", "previous_conflict", "next_unsolved"]:
+        if objects['sentence'].get_text(objects['sentence'].get_start_iter(), objects['sentence'].get_end_iter(), True) != window.corpus[window.conflicts_i[window.this_conflict]]:
+            show_dialog_ok("Changes made to this sentence were discarded.")
+
     if button == "next_conflict":
         if len(window.conflicts) -1 > window.this_conflict:
             goto_conflict(window.this_conflict +1)
@@ -644,7 +648,7 @@ if len(sys.argv) > 2:
 
 def on_close(x, y):
     if window.__dict__.get('unsaved') and window.solved:
-        show_dialog_ok('Are you sure you do not want to save any changes to the file?\nQuit again when you are sure.')
+        show_dialog_ok('Closing CoSMO will discard any changes you have made.\nClick "Save and Quit" to keep them or close again to discard.')
         window.unsaved = False
         return True
     Gtk.main_quit()
