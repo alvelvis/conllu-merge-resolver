@@ -30,12 +30,11 @@
             <property name="can_focus">False</property>
             <child>
               <object class="GtkButton" id="help">
-                <property name="label" translatable="yes">_Help</property>
+                <property name="label" translatable="yes">Help</property>
                 <property name="visible">True</property>
                 <property name="can_focus">True</property>
                 <property name="receives_default">True</property>
                 <property name="relief">none</property>
-                <property name="use_underline">True</property>
                 <style>
                   <class name="colbutton"/>
                 </style>
@@ -241,12 +240,13 @@
             <property name="column_homogeneous">True</property>
             <child>
               <object class="GtkButton" id="save_conflict">
-                <property name="label" translatable="yes">_Save (Alt+S)</property>
+                <property name="label" translatable="yes">Save (Ctrl+S)</property>
                 <property name="name">save-conflict</property>
                 <property name="visible">True</property>
                 <property name="can_focus">True</property>
                 <property name="receives_default">True</property>
                 <property name="use_underline">True</property>
+                <accelerator key="s" signal="clicked" modifiers="GDK_CONTROL_MASK"/>
                 <style>
                   <class name="colbutton"/>
                 </style>
@@ -304,12 +304,12 @@
             </child>
             <child>
               <object class="GtkButton" id="copy_right">
-                <property name="label" translatable="yes">Copy from _Right</property>
+                <property name="label" translatable="yes">Copy from Right</property>
                 <property name="visible">True</property>
                 <property name="can_focus">True</property>
                 <property name="receives_default">True</property>
                 <property name="relief">none</property>
-                <property name="use_underline">True</property>
+                <accelerator key="r" signal="clicked" modifiers="GDK_CONTROL_MASK"/>
                 <style>
                   <class name="colbutton"/>
                 </style>
@@ -321,12 +321,12 @@
             </child>
             <child>
               <object class="GtkButton" id="next_unsolved">
-                <property name="label" translatable="yes">Go to next _Unsolved</property>
+                <property name="label" translatable="yes">Go to next Unsolved</property>
                 <property name="visible">True</property>
                 <property name="can_focus">True</property>
                 <property name="receives_default">True</property>
                 <property name="relief">none</property>
-                <property name="use_underline">True</property>
+                <accelerator key="u" signal="clicked" modifiers="GDK_CONTROL_MASK"/>
                 <style>
                   <class name="colbutton"/>
                 </style>

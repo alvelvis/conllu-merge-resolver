@@ -225,13 +225,6 @@ def goto_conflict(n):
     objects['this_conflict'].set_text("Now: {}".format(n+1))
     if objects['sentence'].get_text(objects['sentence'].get_start_iter(), objects['sentence'].get_end_iter(), True) != window.corpus[window.conflicts_i[n]]:
         objects['sentence'].set_text(window.corpus[window.conflicts_i[n]])
-    text_word_id = window.conflicts[n]['incoming'].split("\t")[0]
-    text_word = window.conflicts[n]['incoming'].split("\t")[1]
-    text_left = [y for x, y in window.tokens[window.conflicts_i[n]].items() if not '-' in x and int(x) < int(text_word_id)] if not '-' in text_word_id else ""
-    text_right = [y for x, y in window.tokens[window.conflicts_i[n]].items() if not '-' in x and int(x) > int(text_word_id)] if not '-' in text_word_id else ""
-    objects['text_word'].set_label(text_word)
-    objects['text_left'].set_text(" ".join(text_left))
-    objects['text_right'].set_text(" ".join(text_right))
     if window.kind == "git":
         objects['filename2'].set_text(window.conflicts[n]['incoming_branch'])
     for i, col in enumerate(cols.split()):
@@ -351,11 +344,10 @@ Default:\nword = \".*\" {id,word,lemma,upos,xpos,feats,dephead,deprel,deps,misc}
 
     if button == "help":
         show_dialog_ok('Hotkeys:\n\n\
-    - Alt + S: Save any sentence modifications you have made (you still need to click "Save and Quit" to save your changes to the actual file).\nIn case it\'s a Git merge conflict file, note that the INCOMING chunk in the sentence will be discarded, so do not edit it.\n\
-    - Alt + Left / Right: Discard any unsaved solution to the current conflict and proceed / go back.\n\
-    - Alt + R: Copy all attributes for this token in conflict from the file in the right.\n\
-    - Alt + U: Find the next conflict you have yet not solved.\n\
-    - Alt + H: Open this help message.\n\
+    - Ctrl + S: Save any sentence modifications you have made (you still need to click "Save and Quit" to save your changes to the actual file).\nIn case it\'s a Git merge conflict file, note that the INCOMING chunk in the sentence will be discarded, so do not edit it.\n\
+    - Alt + Left / Right: Go the previous / next conflict.\n\
+    - Ctrl + R: Copy all attributes for this token in conflict from the file in the right.\n\
+    - Ctrl + U: Find the next conflict you have yet not solved.\n\
                 ')
         return
 
@@ -416,7 +408,7 @@ def draw_tree(conllu):
         data_filename = os.path.join(os.path.dirname(os.path.abspath(__file__)), conllu)
         doc.load_conllu([data_filename])
         root = doc.bundles[0].get_tree()
-        root.draw(indent=4, color=False, attributes='form',
+        root.draw(indent=4, color=False, attributes='form,upos,deprel',
                     print_sent_id=False, print_text=False, print_doc_meta=False)
         s = str(out)
     return s
@@ -481,6 +473,23 @@ def sentence_changed(textbuffer):
     return
 
 def token_in_conflict_changed():
+
+    #text_word_id = window.conflicts[n]['incoming'].split("\t")[0]
+    #text_word = window.conflicts[n]['incoming'].split("\t")[1]
+    #text_left = [(y if x != window.conflicts[n]['head'].split("\t")[6] else "*u*{}*/u*".format(y)) for x, y in window.tokens[window.conflicts_i[n]].items() if not '-' in x and int(x) < int(text_word_id)] if not '-' in text_word_id else ""
+    #text_right = [(y if x != window.conflicts[n]['head'].split("\t")[6] else "*u*{}*/u*".format(y)) for x, y in window.tokens[window.conflicts_i[n]].items() if not '-' in x and int(x) > int(text_word_id)] if not '-' in text_word_id else ""
+    #objects['text_word'].set_label(text_word)
+    #objects['text_left'].set_markup(" ".join(text_left).replace("<", "&lt;").replace(">", "&gt;").replace("*u*", "<u>").replace("*/u*", "</u>"))
+    #objects['text_right'].set_markup(" ".join(text_right).replace("<", "&lt;").replace(">", "&gt;").replace("*u*", "<u>").replace("*/u*", "</u>"))
+
+    text_word_id = window.token_in_conflict.split("\t")[0]
+    text_word = window.token_in_conflict.split("\t")[1]
+    text_left = [(y if x != window.token_in_conflict.split("\t")[6] else "*u*{}*/u*".format(y)) for x, y in window.tokens[window.conflicts_i[window.this_conflict]].items() if not '-' in x and int(x) < int(text_word_id)] if not '-' in text_word_id else ""
+    text_right = [(y if x != window.token_in_conflict.split("\t")[6] else "*u*{}*/u*".format(y)) for x, y in window.tokens[window.conflicts_i[window.this_conflict]].items() if not '-' in x and int(x) > int(text_word_id)] if not '-' in text_word_id else ""
+    objects['text_word'].set_label(text_word)
+    objects['text_left'].set_markup(" ".join(text_left).replace("<", "&lt;").replace(">", "&gt;").replace("*u*", "<u>").replace("*/u*", "</u>"))
+    objects['text_right'].set_markup(" ".join(text_right).replace("<", "&lt;").replace(">", "&gt;").replace("*u*", "<u>").replace("*/u*", "</u>"))
+
     objects['save_conflict'].get_style_context().add_class("save-conflict")
     objects['text_word'].get_style_context().remove_class("text-conflict")
     objects['text_word'].get_style_context().remove_class("text-solved")
