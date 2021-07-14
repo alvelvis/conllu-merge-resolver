@@ -14,8 +14,8 @@
   <object class="GtkWindow" id="window1">
     <property name="can_focus">False</property>
     <property name="title" translatable="yes">CoSMO - CoNLL-U Simple Merge Observer</property>
-    <property name="default_width">800</property>
-    <property name="default_height">650</property>
+    <property name="default_width">860</property>
+    <property name="default_height">740</property>
     <child type="titlebar">
       <placeholder/>
     </child>
@@ -124,7 +124,7 @@
             <property name="margin_top">10</property>
             <property name="position">200</property>
             <child>
-              <object class="GtkScrolledWindow">
+              <object class="GtkScrolledWindow" id="conflicts_nav_grid">
                 <property name="visible">True</property>
                 <property name="can_focus">True</property>
                 <property name="shadow_type">in</property>
@@ -171,7 +171,6 @@
                             <property name="can_focus">True</property>
                             <property name="hexpand">True</property>
                             <property name="vexpand">True</property>
-                            <property name="editable">False</property>
                             <property name="left_margin">2</property>
                             <property name="right_margin">2</property>
                             <property name="monospace">True</property>
@@ -196,7 +195,7 @@
                         <property name="kinetic_scrolling">False</property>
                         <property name="overlay_scrolling">False</property>
                         <child>
-                          <object class="GtkSourceView" id="sentence_view">
+                          <object class="GtkSourceView" id="sentence_viewer">
                             <property name="visible">True</property>
                             <property name="can_focus">True</property>
                             <property name="populate_all">True</property>
@@ -257,7 +256,7 @@
               </packing>
             </child>
             <child>
-              <object class="GtkGrid">
+              <object class="GtkGrid" id="notebook-buttons">
                 <property name="visible">True</property>
                 <property name="can_focus">False</property>
                 <property name="column_homogeneous">True</property>
@@ -285,8 +284,9 @@
                     <property name="visible">True</property>
                     <property name="can_focus">True</property>
                     <property name="receives_default">True</property>
-                    <property name="tooltip_text" translatable="yes">Tree visualization for this sentence</property>
+                    <property name="tooltip_text" translatable="yes">Tree visualization for this sentence (Ctrl+T)</property>
                     <property name="relief">none</property>
+                    <accelerator key="t" signal="clicked" modifiers="GDK_CONTROL_MASK"/>
                     <style>
                       <class name="colbutton"/>
                     </style>
@@ -296,6 +296,9 @@
                     <property name="top_attach">0</property>
                   </packing>
                 </child>
+                <style>
+                  <class name="notebook-buttons"/>
+                </style>
               </object>
               <packing>
                 <property name="left_attach">4</property>
@@ -495,7 +498,7 @@
           <packing>
             <property name="expand">False</property>
             <property name="fill">True</property>
-            <property name="position">8</property>
+            <property name="position">6</property>
           </packing>
         </child>
         <child>
@@ -1091,7 +1094,7 @@
           <packing>
             <property name="expand">False</property>
             <property name="fill">False</property>
-            <property name="position">9</property>
+            <property name="position">7</property>
           </packing>
         </child>
         <child>
@@ -1106,6 +1109,7 @@
                 <property name="margin_right">5</property>
                 <property name="margin_top">5</property>
                 <property name="margin_bottom">5</property>
+                <property name="column_spacing">10</property>
                 <child>
                   <object class="GtkGrid">
                     <property name="visible">True</property>
@@ -1129,7 +1133,6 @@
                       <object class="GtkLabel">
                         <property name="visible">True</property>
                         <property name="can_focus">False</property>
-                        <property name="margin_left">10</property>
                         <property name="label" translatable="yes"> Annotation font: </property>
                         <property name="justify">right</property>
                       </object>
@@ -1189,7 +1192,6 @@
                       <object class="GtkLabel">
                         <property name="visible">True</property>
                         <property name="can_focus">False</property>
-                        <property name="margin_left">10</property>
                         <property name="label" translatable="yes"> Tree font: </property>
                         <property name="justify">right</property>
                       </object>
@@ -1216,6 +1218,37 @@
                     <property name="top_attach">0</property>
                   </packing>
                 </child>
+                <child>
+                  <object class="GtkGrid">
+                    <property name="visible">True</property>
+                    <property name="can_focus">False</property>
+                    <child>
+                      <object class="GtkSwitch" id="dark_mode">
+                        <property name="visible">True</property>
+                        <property name="can_focus">True</property>
+                      </object>
+                      <packing>
+                        <property name="left_attach">1</property>
+                        <property name="top_attach">0</property>
+                      </packing>
+                    </child>
+                    <child>
+                      <object class="GtkLabel">
+                        <property name="visible">True</property>
+                        <property name="can_focus">False</property>
+                        <property name="label" translatable="yes">Dark: </property>
+                      </object>
+                      <packing>
+                        <property name="left_attach">0</property>
+                        <property name="top_attach">0</property>
+                      </packing>
+                    </child>
+                  </object>
+                  <packing>
+                    <property name="left_attach">3</property>
+                    <property name="top_attach">0</property>
+                  </packing>
+                </child>
               </object>
             </child>
             <child type="label">
@@ -1230,7 +1263,7 @@
             <property name="expand">False</property>
             <property name="fill">True</property>
             <property name="padding">5</property>
-            <property name="position">10</property>
+            <property name="position">8</property>
           </packing>
         </child>
         <child>
@@ -1241,7 +1274,7 @@
           <packing>
             <property name="expand">False</property>
             <property name="fill">False</property>
-            <property name="position">11</property>
+            <property name="position">9</property>
           </packing>
         </child>
         <child>
@@ -1250,12 +1283,62 @@
             <property name="can_focus">False</property>
             <property name="margin_left">10</property>
             <property name="margin_right">10</property>
+            <property name="hexpand">True</property>
             <property name="column_spacing">30</property>
             <child>
-              <object class="GtkLabel" id="this_conflict">
+              <object class="GtkGrid">
                 <property name="visible">True</property>
                 <property name="can_focus">False</property>
-                <property name="label" translatable="yes">this_conflict</property>
+                <property name="halign">start</property>
+                <property name="column_spacing">20</property>
+                <child>
+                  <object class="GtkLabel" id="this_conflict">
+                    <property name="visible">True</property>
+                    <property name="can_focus">False</property>
+                    <property name="halign">start</property>
+                    <property name="label" translatable="yes">this_conflict</property>
+                  </object>
+                  <packing>
+                    <property name="left_attach">0</property>
+                    <property name="top_attach">0</property>
+                  </packing>
+                </child>
+                <child>
+                  <object class="GtkLabel" id="conflicts">
+                    <property name="visible">True</property>
+                    <property name="can_focus">False</property>
+                    <property name="halign">start</property>
+                    <property name="label" translatable="yes">conflicts</property>
+                  </object>
+                  <packing>
+                    <property name="left_attach">2</property>
+                    <property name="top_attach">0</property>
+                  </packing>
+                </child>
+                <child>
+                  <object class="GtkLabel" id="unsolvable_conflicts">
+                    <property name="visible">True</property>
+                    <property name="can_focus">False</property>
+                    <property name="halign">start</property>
+                    <property name="margin_left">1</property>
+                    <property name="label" translatable="yes">unsolvable_conflicts</property>
+                  </object>
+                  <packing>
+                    <property name="left_attach">3</property>
+                    <property name="top_attach">0</property>
+                  </packing>
+                </child>
+                <child>
+                  <object class="GtkLabel" id="solved_conflicts">
+                    <property name="visible">True</property>
+                    <property name="can_focus">False</property>
+                    <property name="halign">start</property>
+                  </object>
+                  <packing>
+                    <property name="left_attach">1</property>
+                    <property name="top_attach">0</property>
+                  </packing>
+                </child>
               </object>
               <packing>
                 <property name="left_attach">0</property>
@@ -1263,58 +1346,45 @@
               </packing>
             </child>
             <child>
-              <object class="GtkLabel" id="conflicts">
+              <object class="GtkGrid">
                 <property name="visible">True</property>
                 <property name="can_focus">False</property>
-                <property name="label" translatable="yes">conflicts</property>
+                <property name="halign">end</property>
+                <property name="hexpand">True</property>
+                <property name="column_spacing">20</property>
+                <child>
+                  <object class="GtkLabel" id="filename2">
+                    <property name="visible">True</property>
+                    <property name="can_focus">False</property>
+                    <property name="halign">end</property>
+                    <property name="hexpand">True</property>
+                    <property name="label" translatable="yes">label</property>
+                    <property name="justify">right</property>
+                    <property name="single_line_mode">True</property>
+                  </object>
+                  <packing>
+                    <property name="left_attach">1</property>
+                    <property name="top_attach">0</property>
+                  </packing>
+                </child>
+                <child>
+                  <object class="GtkLabel" id="filename">
+                    <property name="visible">True</property>
+                    <property name="can_focus">False</property>
+                    <property name="halign">end</property>
+                    <property name="hexpand">True</property>
+                    <property name="label" translatable="yes">label</property>
+                    <property name="justify">right</property>
+                    <property name="single_line_mode">True</property>
+                  </object>
+                  <packing>
+                    <property name="left_attach">0</property>
+                    <property name="top_attach">0</property>
+                  </packing>
+                </child>
               </object>
               <packing>
                 <property name="left_attach">1</property>
-                <property name="top_attach">0</property>
-              </packing>
-            </child>
-            <child>
-              <object class="GtkLabel" id="solved_conflicts">
-                <property name="visible">True</property>
-                <property name="can_focus">False</property>
-              </object>
-              <packing>
-                <property name="left_attach">2</property>
-                <property name="top_attach">0</property>
-              </packing>
-            </child>
-            <child>
-              <object class="GtkLabel" id="unsolvable_conflicts">
-                <property name="visible">True</property>
-                <property name="can_focus">False</property>
-                <property name="label" translatable="yes">unsolvable_conflicts</property>
-              </object>
-              <packing>
-                <property name="left_attach">3</property>
-                <property name="top_attach">0</property>
-              </packing>
-            </child>
-            <child>
-              <object class="GtkLabel" id="filename">
-                <property name="visible">True</property>
-                <property name="can_focus">False</property>
-                <property name="label" translatable="yes">label</property>
-                <property name="ellipsize">end</property>
-              </object>
-              <packing>
-                <property name="left_attach">4</property>
-                <property name="top_attach">0</property>
-              </packing>
-            </child>
-            <child>
-              <object class="GtkLabel" id="filename2">
-                <property name="visible">True</property>
-                <property name="can_focus">False</property>
-                <property name="label" translatable="yes">label</property>
-                <property name="ellipsize">end</property>
-              </object>
-              <packing>
-                <property name="left_attach">5</property>
                 <property name="top_attach">0</property>
               </packing>
             </child>
@@ -1323,7 +1393,7 @@
             <property name="expand">False</property>
             <property name="fill">False</property>
             <property name="padding">5</property>
-            <property name="position">13</property>
+            <property name="position">10</property>
           </packing>
         </child>
       </object>

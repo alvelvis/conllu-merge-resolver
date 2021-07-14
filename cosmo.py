@@ -9,6 +9,8 @@ import os
 import json
 import estrutura_ud
 import interrogar_UD
+import html
+import git
 
 def show_dialog_ok(message, entry=False):
     md = Gtk.MessageDialog(window, 0, Gtk.MessageType.INFO, Gtk.ButtonsType.OK, message)
@@ -71,19 +73,35 @@ def load_file(kind, file, file2="", query=""):
     window.filename = file
     window.filename2 = file2
     window.solved = {}
-    objects['filename'].set_text(os.path.basename(window.filename))
-    objects['filename2'].set_text(os.path.basename(window.filename2))
+    branch = ""
+    if os.path.dirname(os.path.abspath(window.filename)) != os.path.dirname(os.path.abspath(__file__)):
+        try:
+            repo = git.Repo(file, search_parent_directories=True)
+            if repo:
+                with open("{}/HEAD".format(repo.git_dir)) as f:
+                    branch = f.read().strip().rsplit("/", 1)[1]
+        except git.exc.InvalidGitRepositoryError:
+            sys.stderr.write("No git repo found for this file.\n")
+    objects['filename'].set_text("{}: {}{}".format(
+        "Head" if kind == "git" else "Left", 
+        os.path.basename(window.filename),
+        " (branch: {})".format(branch) if branch else ""))
+    objects['filename2'].set_text("{}: {}".format(
+        "Right", 
+        os.path.basename(window.filename2)) if kind == "confusion" else "")
     window.tokens = {}
     for i, sentence in enumerate(window.corpus):
         window.tokens[i] = {}
         for token in sentence.splitlines():
-            if len(token.split("\t")) == 10:
-                window.tokens[i][token.split("\t")[0]] = token.split("\t")[1]
+            id = token.split("\t")[0]
+            if len(token.split("\t")) == 10 and not id in window.tokens[i]:
+                window.tokens[i][id] = token
     count_conflicts(query=query)
     if not window.conflicts:
         show_dialog_ok("No conflicts were found.")
         sys.exit()
     window.unsaved = True
+    window.this_conflict = 0
     goto_conflict(0)
     return
 
@@ -197,50 +215,66 @@ def count_conflicts(query):
     position = 0
     for child in objects['conflicts_nav'].get_children():
         objects['conflicts_nav'].remove(child)
-    for i in window.conflicts_each_i:
-        if window.corpus[i].strip() and window.conflicts_each_i[i]:
-            position += 1
-            sent_id = window.corpus[i].split("# sent_id = ")[1].split("\n")[0]
-            label = Gtk.Label(
-                label=" {}".format(sent_id),
-                xalign=0)
-            objects['conflicts_nav'].insert(label, -1)
-            label.n = window.conflicts_each_i[i][0]
-            for _i, _n in enumerate(window.conflicts_each_i[i]):
+    if len(window.conflicts) < 2000:
+        for i in window.conflicts_each_i:
+            if window.corpus[i].strip() and window.conflicts_each_i[i]:
                 position += 1
+                sent_id = window.corpus[i].split("# sent_id = ")[1].split("\n")[0]
                 label = Gtk.Label(
-                    label=" => {}".format(
-                        window.conflicts[_n]['head'].split("\t")[1]),
+                    label=" {}".format(sent_id),
                     xalign=0)
-                label.n = _n
                 objects['conflicts_nav'].insert(label, -1)
-                window.conflicts_nav_label[_n] = objects['conflicts_nav'].get_row_at_index(position-1)
-    objects['conflicts_nav'].show_all()
+                label.n = window.conflicts_each_i[i][0]
+                for _i, _n in enumerate(window.conflicts_each_i[i]):
+                    position += 1
+                    label = Gtk.Label(
+                        label=" => {}".format(
+                            window.conflicts[_n]['head'].split("\t")[1]),
+                        xalign=0)
+                    label.n = _n
+                    objects['conflicts_nav'].insert(label, -1)
+                    window.conflicts_nav_label[_n] = objects['conflicts_nav'].get_row_at_index(position-1)
+        objects['conflicts_nav'].show_all()
+    else:
+        objects['sentence_resize'].props.position = 0
     objects['unsolvable_conflicts'].set_text("{} unsolvable conflicts".format(bad_conflicts))
-    objects['conflicts'].set_text("{} conflicts".format(len(window.conflicts)))
+    objects['conflicts'].set_text("Total: {} conflicts".format(len(window.conflicts)))
     return
 
 def goto_conflict(n):
+    sentence_text = objects['sentence'].get_text(objects['sentence'].get_start_iter(), objects['sentence'].get_end_iter(), True)
+    if len(sentence_text):
+        if sentence_text.strip() != window.corpus[window.conflicts_i[window.this_conflict]].strip():
+            show_dialog_ok("Changes made to this sentence were discarded.")
     window.this_conflict = n
     objects['this_conflict'].set_text("Now: {}".format(n+1))
     if objects['sentence'].get_text(objects['sentence'].get_start_iter(), objects['sentence'].get_end_iter(), True) != window.corpus[window.conflicts_i[n]]:
         objects['sentence'].set_text(window.corpus[window.conflicts_i[n]])
+        objects['attachment_menu'] = Gtk.Menu()
     if window.kind == "git":
-        objects['filename2'].set_text(window.conflicts[n]['incoming_branch'])
+        objects['filename2'].set_text("{}: {}".format("Incoming", window.conflicts[n]['incoming_branch']))
     for i, col in enumerate(cols.split()):
         objects['left_{}'.format(col)].set_label(window.conflicts[n]['head'].split("\t")[i])
         objects['right_{}'.format(col)].set_label(window.conflicts[n]['incoming'].split("\t")[i])
+    already_changed = []
+    conflict_id = window.conflicts[n]['head'].split("\t")[0]
     for l, line in enumerate(window.corpus[window.conflicts_i[n]].splitlines()):
-        if line.count("\t") == 9 and line.split("\t")[0] == window.conflicts[n]['head'].split("\t")[0]:
-            window.token_in_conflict = line if not n in window.solved else window.solved[n]
-            token_in_conflict_changed()
-            break
-    left_head = window.tokens[window.conflicts_i[n]].get(window.conflicts[n]['head'].split("\t")[6], "None")
-    right_head = window.tokens[window.conflicts_i[n]].get(window.conflicts[n]['incoming'].split("\t")[6], "None")
-    objects['left_label'].set_text('head [ {} ]'.format(left_head))
-    objects['right_label'].set_text('[ {} ] head'.format(right_head))
-    objects['conflicts_nav'].select_row(window.conflicts_nav_label[n])
-    GLib.idle_add(window.conflicts_nav_label[n].grab_focus)
+        if line.count("\t") == 9:
+            id = line.split("\t")[0]
+            word = line.split("\t")[1]
+            if not id in already_changed:
+                already_changed.append(id)
+                if id == conflict_id:
+                    window.token_in_conflict = line if not n in window.solved else window.solved[n]
+                    token_in_conflict_changed()
+                    break
+    left_head = window.tokens[window.conflicts_i[n]].get(window.conflicts[n]['head'].split("\t")[6], "")
+    right_head = window.tokens[window.conflicts_i[n]].get(window.conflicts[n]['incoming'].split("\t")[6], "")
+    objects['left_label'].set_text('head [ {} ]'.format(left_head.split("\t")[1] if left_head else left_head))
+    objects['right_label'].set_text('[ {} ] head'.format(right_head.split("\t")[1] if right_head else right_head))
+    if n in window.conflicts_nav_label:
+        objects['conflicts_nav'].select_row(window.conflicts_nav_label[n])
+        GLib.idle_add(window.conflicts_nav_label[n].grab_focus)
     objects['save_conflict'].get_style_context().remove_class("save-conflict")
     objects['text_word'].get_style_context().remove_class("text-conflict")
     objects['text_word'].get_style_context().remove_class("text-solved")
@@ -280,10 +314,6 @@ Default:\nword = \".*\" {id,word,lemma,upos,xpos,feats,dephead,deprel,deps,misc}
                     return
                 load_file("confusion", win.filename, win2.filename, query)
         return
-
-    if button in ["next_conflict", "previous_conflict", "next_unsolved"]:
-        if objects['sentence'].get_text(objects['sentence'].get_start_iter(), objects['sentence'].get_end_iter(), True) != window.corpus[window.conflicts_i[window.this_conflict]]:
-            show_dialog_ok("Changes made to this sentence were discarded.")
 
     if button == "next_conflict":
         if len(window.conflicts) -1 > window.this_conflict:
@@ -345,13 +375,18 @@ Default:\nword = \".*\" {id,word,lemma,upos,xpos,feats,dephead,deprel,deps,misc}
     if button == "help":
         show_dialog_ok('Hotkeys:\n\n\
     - Ctrl + S: Save any sentence modifications you have made (you still need to click "Save and Quit" to save your changes to the actual file).\nIn case it\'s a Git merge conflict file, note that the INCOMING chunk in the sentence will be discarded, so do not edit it.\n\
-    - Alt + Left / Right: Go the previous / next conflict.\n\
+    - Alt + Left / Right: Go to the previous / next conflict, discarding any changes not saved.\n\
     - Ctrl + R: Copy all attributes for this token in conflict from the file in the right.\n\
     - Ctrl + U: Find the next conflict you have yet not solved.\n\
+    - Ctrl + T: Change tree/sentence visualization.\n\
+    - Right click any token to choose where to attach it.\n\
                 ')
         return
 
     if button == "tree_button":
+        if not window.changed_attached and objects['tree_container'].props.visible:
+            click_button(objects['sentence_button'])
+            return
         sentence = (objects['sentence'].get_text(
                 objects['sentence'].get_start_iter(), 
                 objects['sentence'].get_end_iter(), 
@@ -368,10 +403,16 @@ Default:\nword = \".*\" {id,word,lemma,upos,xpos,feats,dephead,deprel,deps,misc}
                 is_incoming = False
                 continue
             if not is_incoming:
-                new_sentence.append(line)        
+                new_sentence.append(line)
         with open(os.path.dirname(os.path.abspath(__file__)) + "/sentence.conllu", "w", encoding="utf-8") as f:
             f.write("\n".join(new_sentence).strip() + "\n\n")
-        output = "\n".join(draw_tree("sentence.conllu").splitlines()[1:])
+        try:
+            output = "\n".join(draw_tree("sentence.conllu").splitlines()[1:])
+        except ValueError as e:
+            show_dialog_ok("{}:\n{}".format(str(e).split(": ", 1)[0], str(e).split(": ", 1)[1]))
+            if objects['tree_container'].props.visible:
+                click_button(objects['sentence_button'])
+            return
         if not ' root' in output.splitlines()[0]:
             output = output.split("    │", 1)[1]
             output = ("────┮" + output).strip()
@@ -400,6 +441,72 @@ Default:\nword = \".*\" {id,word,lemma,upos,xpos,feats,dephead,deprel,deps,misc}
                 objects['grid_cols'].show()
         objects['tree_container'].hide()
         return
+
+def attach_token(widget):
+    sentence_or_tree = "tree" if objects['tree_container'].props.visible else "sentence"
+    label = widget.get_label().replace("<b>", "").replace("</b>", "")
+    dephead = label.split(maxsplit=1)[0]
+    sentence = objects['sentence'].get_text(objects['sentence'].get_start_iter(), objects['sentence'].get_end_iter(), True).strip().splitlines()
+    for token in sentence:
+        if token.count("\t") == 9 and token.split("\t")[0] == dephead:
+            dephead_dephead = token.split("\t")[6]
+            break
+    if dephead == window.token_being_attached or dephead_dephead == window.token_being_attached:
+        show_dialog_ok("Not allowed: introduces a cycle.")
+        return
+    for l, line in enumerate(sentence):
+        if line.count("\t") == 9 and line.split("\t")[0] == window.token_being_attached:
+            line = line.split("\t")
+            line[6] = dephead
+            line = "\t".join(line)
+            sentence[l] = line
+            break
+    objects['sentence'].set_text("\n".join(sentence))
+    if sentence_or_tree == "tree":
+        window.changed_attached = True
+        click_button(objects['tree_button'])
+        window.changed_attached = False
+    elif sentence_or_tree == "sentence":
+        objects["sentence"].remove_tag_by_name(
+            "reattached", objects["sentence"].get_start_iter(), objects["sentence"].get_end_iter())
+        objects["sentence"].apply_tag_by_name(
+            'reattached',
+            objects["sentence"].get_iter_at_line(l), 
+            objects["sentence"].get_iter_at_line_offset(l, len(line)))
+    objects[sentence_or_tree].move_mark_by_name("reattached", objects[sentence_or_tree].get_iter_at_line(l))
+    GLib.idle_add(
+        objects['{}_viewer'.format(sentence_or_tree)].scroll_to_mark, objects[sentence_or_tree].get_mark("reattached"), 0.1, True, 0.0, 0.5)
+    return
+
+def attach_popup(widget, event):
+    if event.button == 3:
+        tree_or_sentence = Gtk.Buildable.get_name(widget).split("_")[0]
+        x, y = widget.get_pointer()
+        x, y = widget.window_to_buffer_coords(Gtk.TextWindowType.WIDGET, x, y)
+        iter = widget.get_iter_at_location(x, y)
+        objects[tree_or_sentence].place_cursor(iter[1])
+        pos = objects[tree_or_sentence].get_iter_at_mark(objects[tree_or_sentence].get_insert())
+        window.token_being_attached = str(pos.get_line()+1) if tree_or_sentence == "tree" else window.corpus[window.conflicts_i[window.this_conflict]].splitlines()[pos.get_line()].split("\t")[0]
+        for menu in objects['attachment_menu'].get_children():
+            objects['attachment_menu'].remove(menu)
+        already_appended = []
+        for line in objects['sentence'].get_text(objects['sentence'].get_start_iter(), objects['sentence'].get_end_iter(), True).splitlines():
+            if line.count("\t") == 9:
+                id = line.split("\t")[0]
+                word = line.split("\t")[1]
+                if not '-' in id and not id in already_appended:
+                    menu_item = Gtk.MenuItem("")
+                    menu_item.connect('activate', attach_token)
+                    if id == window.token_being_attached:
+                        menu_item.get_children()[0].set_markup(markup_bold("<b>{} {}</b>".format(id, word)))
+                    else:
+                        menu_item.get_children()[0].set_label("{} {}".format(id, word))
+                    objects['attachment_menu'].append(menu_item)
+                    already_appended.append(id)
+        objects['attachment_menu'].show_all()
+        objects['attachment_menu'].popup_at_pointer()
+        return True
+    return False
 
 def draw_tree(conllu):
     """Test the draw() method, which uses udapi.block.write.textmodetrees."""
@@ -433,15 +540,19 @@ def save_token_in_conflict(btn=None):
     conflict = window.token_in_conflict.strip()
     if conflict and conflict.count("\t") == 9 and all(x.strip() for x in conflict.split("\t")):
         window.solved[window.this_conflict] = conflict
-        objects['solved_conflicts'].set_text("{} solved conflicts".format(len(window.solved)))
-        conflicts_nav_label = window.conflicts_nav_label[window.this_conflict].get_children()[0].get_label()
-        if not '✔' in conflicts_nav_label:
-            window.conflicts_nav_label[window.this_conflict].get_children()[0].set_label("{} {}".format(conflicts_nav_label, "✔"))
+        objects['solved_conflicts'].set_text("Solved: {}".format(len(window.solved)))
+        if window.this_conflict in window.conflicts_nav_label:
+            conflicts_nav_label = window.conflicts_nav_label[window.this_conflict].get_children()[0].get_label()
+            if not '✔' in conflicts_nav_label:
+                window.conflicts_nav_label[window.this_conflict].get_children()[0].set_label("{} {}".format(conflicts_nav_label, "✔"))
     else:
         show_dialog_ok("Conflict not saved: wrong annotation format")
         return
     sentence_text = objects['sentence'].get_text(
         objects['sentence'].get_start_iter(), objects['sentence'].get_end_iter(), True).strip()
+    if len(sentence_text.strip().splitlines()) != len(window.corpus[window.conflicts_i[window.this_conflict]].strip().splitlines()):
+        show_dialog_ok("Sentence has different number of lines, not saving it.")
+        return
     if (sentence_text.strip() and 
         all(not '\t' in x or (x.count("\t") == 9 and all(y.strip() for y in x.split("\t"))) for x in sentence_text.splitlines()) and
         window.kind != "git" or (window.kind == "git" and all(x in sentence_text for x in ["<<<<<<< HEAD", "=======", ">>>>>>>"]))):
@@ -458,75 +569,109 @@ def change_col(btn):
     token_in_conflict = window.token_in_conflict.split("\t")
     token_in_conflict[c] = btn.get_label()
     window.token_in_conflict = "\t".join(token_in_conflict)
-    token_in_conflict_changed()
+    sentence_text = objects['sentence'].get_text(
+        objects['sentence'].get_start_iter(), objects['sentence'].get_end_iter(), True).splitlines()
+    conflict_id = window.token_in_conflict.split("\t")[0]
+    for l, line in enumerate(sentence_text):
+        if line.split("\t")[0] == conflict_id and sentence_text[l] != window.token_in_conflict:
+            sentence_text[l] = window.token_in_conflict
+            objects['sentence'].set_text("\n".join(sentence_text))
+            token_in_conflict_changed()
+            break
     return
 
 def sentence_changed(textbuffer):
     objects['save_conflict'].get_style_context().add_class("save-conflict")
+    conflict_id = window.token_in_conflict.split("\t")[0]
     for l, line in enumerate(
         textbuffer.get_text(textbuffer.get_start_iter(), textbuffer.get_end_iter(), True).splitlines()):
-        if line.count("\t") == 9 and line.split("\t")[0] == window.token_in_conflict.split("\t")[0]:
-            if line != window.token_in_conflict:
-                window.token_in_conflict = line
-                token_in_conflict_changed()
-            break
+        if line.count("\t") == 9:
+            if line.split("\t")[0] == conflict_id:
+                if line != window.token_in_conflict:
+                    window.token_in_conflict = line
+                    token_in_conflict_changed(highlight=False)
+                return
     return
 
-def token_in_conflict_changed():
+def tree_changed(textbuffer):
+    sentence = objects['sentence'].get_text(objects['sentence'].get_start_iter(), objects['sentence'].get_end_iter(), True).splitlines()
+    tokens = {}
+    for l, line in enumerate(
+        textbuffer.get_text(textbuffer.get_start_iter(), textbuffer.get_end_iter(), True).strip().splitlines()):
+        line = "".join([x for x in line if x not in "│┾╼─┮╰╭┢┶┡╪"])
+        if len(line.split()) >= 3:
+            upos = line.rsplit(maxsplit=2)[-2]
+            deprel = line.rsplit(maxsplit=2)[-1]
+            if not str(l+1) in tokens:
+                tokens[str(l+1)] = (upos, deprel)
+    already_changed = []
+    for l, line in enumerate(sentence):
+        if line.count("\t") == 9:
+            id = line.split("\t")[0]
+            if id in tokens and not id in already_changed:
+                already_changed.append(id)
+                line = line.split("\t")
+                line[3] = tokens[id][0]
+                line[7] = tokens[id][1]
+                line = "\t".join(line)
+                if line != sentence[l]:
+                    sentence[l] = line
+                    objects['sentence'].set_text("\n".join(sentence))
+                    break
+    return
 
-    #text_word_id = window.conflicts[n]['incoming'].split("\t")[0]
-    #text_word = window.conflicts[n]['incoming'].split("\t")[1]
-    #text_left = [(y if x != window.conflicts[n]['head'].split("\t")[6] else "*u*{}*/u*".format(y)) for x, y in window.tokens[window.conflicts_i[n]].items() if not '-' in x and int(x) < int(text_word_id)] if not '-' in text_word_id else ""
-    #text_right = [(y if x != window.conflicts[n]['head'].split("\t")[6] else "*u*{}*/u*".format(y)) for x, y in window.tokens[window.conflicts_i[n]].items() if not '-' in x and int(x) > int(text_word_id)] if not '-' in text_word_id else ""
-    #objects['text_word'].set_label(text_word)
-    #objects['text_left'].set_markup(" ".join(text_left).replace("<", "&lt;").replace(">", "&gt;").replace("*u*", "<u>").replace("*/u*", "</u>"))
-    #objects['text_right'].set_markup(" ".join(text_right).replace("<", "&lt;").replace(">", "&gt;").replace("*u*", "<u>").replace("*/u*", "</u>"))
+def markup_underline(text):
+    return html.escape(text.replace("<u>", "*u*").replace("</u>", "*/u*")).replace("*u*", "<u>").replace("*/u*", "</u>")
 
+def markup_bold(text):
+    return html.escape(text.replace("<b>", "*b*").replace("</b>", "*/b*")).replace("*b*", "<b>").replace("*/b*", "</b>")
+
+def token_in_conflict_changed(highlight=True):
+    conflict_id = window.token_in_conflict.split("\t")[0]
     text_word_id = window.token_in_conflict.split("\t")[0]
     text_word = window.token_in_conflict.split("\t")[1]
-    text_left = [(y if x != window.token_in_conflict.split("\t")[6] else "*u*{}*/u*".format(y)) for x, y in window.tokens[window.conflicts_i[window.this_conflict]].items() if not '-' in x and int(x) < int(text_word_id)] if not '-' in text_word_id else ""
-    text_right = [(y if x != window.token_in_conflict.split("\t")[6] else "*u*{}*/u*".format(y)) for x, y in window.tokens[window.conflicts_i[window.this_conflict]].items() if not '-' in x and int(x) > int(text_word_id)] if not '-' in text_word_id else ""
+    text_left = [(y.split("\t")[1] if x != window.token_in_conflict.split("\t")[6] else "<u>{}</u>".format(y.split("\t")[1])) for x, y in window.tokens[window.conflicts_i[window.this_conflict]].items() if not '-' in x and int(x) < int(text_word_id)] if not '-' in text_word_id else ""
+    text_right = [(y.split("\t")[1] if x != window.token_in_conflict.split("\t")[6] else "<u>{}</u>".format(y.split("\t")[1])) for x, y in window.tokens[window.conflicts_i[window.this_conflict]].items() if not '-' in x and int(x) > int(text_word_id)] if not '-' in text_word_id else ""
     objects['text_word'].set_label(text_word)
-    objects['text_left'].set_markup(" ".join(text_left).replace("<", "&lt;").replace(">", "&gt;").replace("*u*", "<u>").replace("*/u*", "</u>"))
-    objects['text_right'].set_markup(" ".join(text_right).replace("<", "&lt;").replace(">", "&gt;").replace("*u*", "<u>").replace("*/u*", "</u>"))
-
+    objects['text_left'].set_markup(markup_underline(" ".join(text_left)))
+    objects['text_right'].set_markup(markup_underline(" ".join(text_right)))
     objects['save_conflict'].get_style_context().add_class("save-conflict")
     objects['text_word'].get_style_context().remove_class("text-conflict")
     objects['text_word'].get_style_context().remove_class("text-solved")
-    sentence_text = objects['sentence'].get_text(
-        objects['sentence'].get_start_iter(), objects['sentence'].get_end_iter(), False).splitlines()
-    for l, line in enumerate(sentence_text):
-        if line.count("\t") == 9 and line.split("\t")[0] == window.token_in_conflict.split("\t")[0]:
-            if sentence_text[l] != window.token_in_conflict:
-                sentence_text[l] = window.token_in_conflict
-                objects['sentence'].set_text("\n".join(sentence_text))
-            objects['sentence'].remove_tag_by_name(
-                "conflict", objects['sentence'].get_start_iter(), objects['sentence'].get_end_iter())
-            objects['sentence'].apply_tag_by_name(
-                'conflict',
-                objects['sentence'].get_iter_at_line(l), 
-                objects['sentence'].get_iter_at_line_offset(l, len(window.token_in_conflict)))
-            objects['sentence'].move_mark_by_name("conflict", objects['sentence'].get_iter_at_line(l))
-            GLib.idle_add(
-                objects['sentence_view'].scroll_to_mark, objects['sentence'].get_mark("conflict"), 0.1, True, 0.0, 0.5)
-            break
+    sentence_text = objects['sentence'].get_text(objects['sentence'].get_start_iter(), objects['sentence'].get_end_iter(), False).splitlines()
+    if highlight:
+        for l, line in enumerate(sentence_text):
+            if line.count("\t") == 9 and line.split("\t")[0] == conflict_id:
+                objects['sentence'].remove_tag_by_name(
+                    "conflict", objects['sentence'].get_start_iter(), objects['sentence'].get_end_iter())
+                objects['sentence'].apply_tag_by_name(
+                    'conflict',
+                    objects['sentence'].get_iter_at_line(l), 
+                    objects['sentence'].get_iter_at_line_offset(l, len(window.token_in_conflict)))
+                objects['sentence'].move_mark_by_name("conflict", objects['sentence'].get_iter_at_line(l))
+                GLib.idle_add(
+                    objects['{}_viewer'.format('sentence')].scroll_to_mark, objects['sentence'].get_mark("conflict"), 0.1, True, 0.0, 0.5)
+                break
+    head_split = window.conflicts[window.this_conflict]['head'].split("\t")
+    incoming_split = window.conflicts[window.this_conflict]['incoming'].split("\t")
+    token_in_conflict_split = window.token_in_conflict.split("\t")
     for i, col in enumerate(cols.split()):
         left = objects['left_{}'.format(col)].get_style_context()
         right = objects['right_{}'.format(col)].get_style_context()
         left.remove_class("solved")
         left.remove_class("conflict")
         right.remove_class("solved")
-        right.remove_class("conflict")            
-        if (window.conflicts[window.this_conflict]['head'].split("\t")[i] != window.conflicts[window.this_conflict]['incoming'].split("\t")[i] or
-            (window.conflicts[window.this_conflict]['head'].split("\t")[i] == window.conflicts[window.this_conflict]['incoming'].split("\t")[i] and
-            window.conflicts[window.this_conflict]['head'].split("\t")[i] != window.token_in_conflict.split("\t")[i])):
-            if window.token_in_conflict.split("\t")[i] == window.conflicts[window.this_conflict]['head'].split("\t")[i]:
+        right.remove_class("conflict")
+        if (head_split[i] != incoming_split[i] or
+            (head_split[i] == incoming_split[i] and
+            head_split[i] != token_in_conflict_split[i])):
+            if token_in_conflict_split[i] == head_split[i]:
                 if not 'solved' in left.list_classes():
                     left.add_class("solved")
             else:
                 if not 'conflict' in left.list_classes():
                     left.add_class("conflict")
-            if window.token_in_conflict.split("\t")[i] == window.conflicts[window.this_conflict]['incoming'].split("\t")[i]:
+            if token_in_conflict_split[i] == incoming_split[i]:
                 if not 'solved' in right.list_classes():
                     right.add_class("solved")
             else:
@@ -536,7 +681,7 @@ def token_in_conflict_changed():
 
 def font_changed(btn):
     font_description = btn.get_font_desc()
-    objects['sentence_view'].modify_font(font_description)
+    objects['sentence_viewer'].modify_font(font_description)
     window.config['font'] = btn.get_font()
     save_config()
     return
@@ -546,9 +691,9 @@ def label_font_changed(btn):
     font = btn.get_font()
     objects['text_left'].modify_font(font_description)
     objects['text_right'].modify_font(font_description)
-    objects['text_word'].modify_font(Pango.FontDescription("{} {}".format(
+    objects['text_word'].modify_font(Pango.FontDescription("{} {} {}".format(
         font.rsplit(" ", 1)[0],
-        #'Bold',
+        'Bold',
         font.rsplit(" ", 1)[1]
     )))
     window.config['label_font'] = font
@@ -574,6 +719,20 @@ def tree_zoom(btn):
     save_config()
     return
 
+def dark_mode_changed(btn, state):
+    for obj in objects:
+        try:
+            objects[obj].get_style_context().remove_class('light' if state else 'dark')
+            objects[obj].get_style_context().add_class('dark' if state else 'light')
+        except AttributeError:
+            pass
+    settings.set_property("gtk-application-prefer-dark-theme", state)  # if you want use dark theme, set second arg to True
+    window.config['dark_mode'] = state
+    objects['sentence_viewer'].set_highlight_current_line(not state)
+    objects['tree_viewer'].set_highlight_current_line(not state)
+    save_config()
+    return
+    
 builder = Gtk.Builder()
 GObject.type_register(GtkSource.View)
 builder.add_from_file(os.path.dirname(os.path.abspath(__file__)) + "/conllu-merge-resolver.glade")
@@ -583,13 +742,12 @@ provider.load_from_path(os.path.dirname(os.path.abspath(__file__)) + "/conllu-me
 Gtk.StyleContext.add_provider_for_screen(screen, provider, Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION)
 
 settings = Gtk.Settings.get_default()
-settings.set_property("gtk-application-prefer-dark-theme", False)  # if you want use dark theme, set second arg to True
 
 buttons = "text_word tree_button sentence_button copy_right help next_unsolved save_conflict open_git_file open_confusion \
     next_conflict previous_conflict save_changes"
-other_objects = "label_font label_container grid_cols tree_zoom sentence_container tree_container conflicts_nav font sentence_view filename filename2 \
+other_objects = "notebook-buttons dark_mode label_font label_container grid_cols tree_zoom sentence_container tree_container conflicts_nav_grid conflicts_nav font sentence_viewer filename filename2 \
     text_left text_right conflicts this_conflict solved_conflicts unsolvable_conflicts \
-    left_label right_label tree_viewer"
+    left_label right_label tree_viewer sentence_resize"
 cols = "id word lemma upos xpos feats dephead deprel deps misc"
 
 objects = {
@@ -607,16 +765,24 @@ for col in cols.split():
         objects["{}_{}".format(direction, col)] = builder.get_object("{}_{}".format(direction, col))
         objects["{}_{}".format(direction, col)].connect('clicked', change_col)
 
-objects['sentence'] = objects['sentence_view'].get_buffer()
+objects['sentence'] = objects['sentence_viewer'].get_buffer()
 objects['sentence'].connect('changed', sentence_changed)
-objects['sentence'].create_tag('conflict', background="lightyellow")
+objects['tree'] = objects['tree_viewer'].get_buffer()
+objects['tree'].connect('changed', tree_changed)
+objects['sentence'].create_tag('conflict', background="yellow", foreground="black")
+objects['sentence'].create_tag('reattached', background="yellow", foreground="black")
 objects['sentence'].create_mark('conflict', objects['sentence'].get_start_iter())
+objects['sentence'].create_mark('reattached', objects['sentence'].get_start_iter())
+objects['tree'].create_mark('reattached', objects['tree'].get_start_iter())
+objects['tree_viewer'].connect('button-press-event', attach_popup)
 objects['font'].connect('font-set', font_changed)
 objects['label_font'].connect('font-set', label_font_changed)
 objects['conflicts_nav'].connect('row-activated', conflicts_nav_changed)
 objects['tree_zoom'].connect('value-changed', tree_zoom)
+objects['dark_mode'].connect('state-set', dark_mode_changed)
 
 window = builder.get_object("window1")
+window.changed_attached = False
 window.config = {}
 
 config_path = os.path.dirname(os.path.abspath(__file__)) + "/config.json"
@@ -640,6 +806,9 @@ objects['label_font'].set_font(
         'label_font',
         'Arial 12' if 'win' in sys.platform else "Open Sans 12"))
 label_font_changed(objects['label_font'])
+
+objects['dark_mode'].props.active = window.config.get('dark_mode')
+dark_mode_changed(objects['dark_mode'], window.config.get('dark_mode'))
 
 if len(sys.argv) == 2:
     if not os.path.isfile(sys.argv[1]):
