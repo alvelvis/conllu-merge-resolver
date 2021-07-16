@@ -10,7 +10,8 @@ import json
 import estrutura_ud
 import interrogar_UD
 import html
-import git
+if not 'win' in sys.platform:
+    import git
 
 def show_dialog_ok(message, entry=False):
     md = Gtk.MessageDialog(window, 0, Gtk.MessageType.INFO, Gtk.ButtonsType.OK, message)
@@ -74,14 +75,15 @@ def load_file(kind, file, file2="", query=""):
     window.filename2 = file2
     window.solved = {}
     branch = ""
-    if os.path.dirname(os.path.abspath(window.filename)) != os.path.dirname(os.path.abspath(__file__)):
-        try:
-            repo = git.Repo(file, search_parent_directories=True)
-            if repo:
-                with open("{}/HEAD".format(repo.git_dir)) as f:
-                    branch = f.read().strip().rsplit("/", 1)[1]
-        except git.exc.InvalidGitRepositoryError:
-            sys.stderr.write("No git repo found for this file.\n")
+    if not "win" in sys.platform:
+        if os.path.dirname(os.path.abspath(window.filename)) != os.path.dirname(os.path.abspath(__file__)):
+            try:
+                repo = git.Repo(file, search_parent_directories=True)
+                if repo:
+                    with open("{}/HEAD".format(repo.git_dir)) as f:
+                        branch = f.read().strip().rsplit("/", 1)[1]
+            except git.exc.InvalidGitRepositoryError:
+                sys.stderr.write("No git repo found for this file.\n")
     objects['filename'].set_text("{}: {}{}".format(
         "Head" if kind == "git" else "Left", 
         os.path.basename(window.filename),
