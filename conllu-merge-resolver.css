@@ -28,10 +28,10 @@
 }
 
 .text-solved.dark {
-    background: rgb(0, 128, 0);
+    background: rgb(22, 145, 22);
 }
 
-.conflict, .solved {
+.conflict label, .solved label {
     font-weight: bold;
 }
 
@@ -39,8 +39,8 @@
     color: red;
 }
 
-.conflict.dark label {
-    background: rgb(255, 36, 36);
+.conflict.dark {
+    background: rgb(255, 67, 67);
 }
 
 .solved.light label {
@@ -48,9 +48,8 @@
     
 }
 
-.solved.dark label {
-    background: rgb(0, 128, 0);
-
+.solved.dark {
+    background: rgb(22, 145, 22);
 }
 
 .save-conflict.light {
@@ -58,7 +57,7 @@
 }
 
 .save-conflict.dark {
-    background: rgb(0, 128, 0);
+    background: rgb(22, 145, 22);
 }
 
 .colbutton {

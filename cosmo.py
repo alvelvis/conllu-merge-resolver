@@ -731,6 +731,8 @@ def dark_mode_changed(btn, state):
     objects['sentence_viewer'].set_highlight_current_line(not state)
     objects['tree_viewer'].set_highlight_current_line(not state)
     save_config()
+    objects['conflict'].props.background = "yellow" if not state else "darkgrey"
+    objects['conflict'].props.foreground = "black"
     return
     
 builder = Gtk.Builder()
@@ -769,12 +771,12 @@ objects['sentence'] = objects['sentence_viewer'].get_buffer()
 objects['sentence'].connect('changed', sentence_changed)
 objects['tree'] = objects['tree_viewer'].get_buffer()
 objects['tree'].connect('changed', tree_changed)
-objects['sentence'].create_tag('conflict', background="yellow", foreground="black")
-objects['sentence'].create_tag('reattached', background="yellow", foreground="black")
+objects['tree_viewer'].connect('button-press-event', attach_popup)
+objects['conflict'] = objects['sentence'].create_tag('conflict')
+objects['reattached'] = objects['sentence'].create_tag('reattached')
 objects['sentence'].create_mark('conflict', objects['sentence'].get_start_iter())
 objects['sentence'].create_mark('reattached', objects['sentence'].get_start_iter())
 objects['tree'].create_mark('reattached', objects['tree'].get_start_iter())
-objects['tree_viewer'].connect('button-press-event', attach_popup)
 objects['font'].connect('font-set', font_changed)
 objects['label_font'].connect('font-set', label_font_changed)
 objects['conflicts_nav'].connect('row-activated', conflicts_nav_changed)
@@ -808,7 +810,7 @@ objects['label_font'].set_font(
 label_font_changed(objects['label_font'])
 
 objects['dark_mode'].props.active = window.config.get('dark_mode')
-dark_mode_changed(objects['dark_mode'], window.config.get('dark_mode'))
+dark_mode_changed(objects['dark_mode'], objects['dark_mode'].props.active)
 
 if len(sys.argv) == 2:
     if not os.path.isfile(sys.argv[1]):
