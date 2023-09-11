@@ -838,7 +838,7 @@ if len(sys.argv) > 2:
 
 def on_close(x, y):
     if window.__dict__.get('unsaved') and window.solved:
-        show_dialog_ok('Closing CoSMO will discard any changes you have made.\nClick "Save and Quit" to keep them or close again to discard.')
+        show_dialog_ok('Closing COSMo will discard any changes you have made.\nClick "Save and Quit" to keep them or close again to discard.')
         window.unsaved = False
         return True
     Gtk.main_quit()
