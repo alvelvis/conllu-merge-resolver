@@ -13,7 +13,7 @@
   </object>
   <object class="GtkWindow" id="window1">
     <property name="can_focus">False</property>
-    <property name="title" translatable="yes">COSMo - (C)oNLL-U (O)pen-(S)ource (M)erger</property>
+    <property name="title" translatable="yes">CoSMo - (Co)NLL-U Open-(S)ource (M)erger</property>
     <property name="default_width">860</property>
     <property name="default_height">740</property>
     <child type="titlebar">
