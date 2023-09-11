@@ -1,10 +1,10 @@
-# COSMo - (C)oNLL-U (O)pen-(S)ource (M)erger
+# CoSMo - (Co)NLL-U Open-(S)ource (M)erger
 
 Simple GUI to help solve Git conflicts and adjudicate divergent annotation in CoNLL-U files
 
 `python3 cosmo.py`
 
-![COSMo Screenshot](https://github.com/alvelvis/conllu-merge-resolver/blob/main/screen.png?raw=true)
+![CoSMo Screenshot](https://github.com/alvelvis/conllu-merge-resolver/blob/main/screen.png?raw=true)
 
 ## Windows
 
