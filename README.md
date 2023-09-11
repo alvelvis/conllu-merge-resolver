@@ -1,10 +1,10 @@
-# CoSMO - CoNLL-U Simple Merge Observer
+# CoSMo - (Co)NLL-U (S)imple (M)erger
 
-Simple GUI to help solve Git conflicts in CoNLL-U files
+Simple GUI to help solve Git conflicts and adjudicate divergent annotation in CoNLL-U files
 
 `python3 cosmo.py`
 
-![CoSMO Screenshot](https://github.com/alvelvis/conllu-merge-resolver/blob/main/screen.png?raw=true)
+![CoSMo Screenshot](https://github.com/alvelvis/conllu-merge-resolver/blob/main/screen.png?raw=true)
 
 ## Windows
 
