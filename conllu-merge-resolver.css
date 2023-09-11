@@ -39,6 +39,10 @@
     color: red;
 }
 
+.unsolvable {
+    color: red;
+}
+
 .conflict.dark {
     background: rgb(255, 67, 67);
 }
@@ -60,11 +64,20 @@
     background: rgb(22, 145, 22);
 }
 
-.colbutton {
-   padding: 2px 4px;
-   margin: 1px 1px;
+button  {
+    min-height: 0;
+    min-width: 0;
+    padding: 4px 0px;
+    border-radius: 5px;
 }
 
-button {
-    min-height: 0;
+.colbutton {
+    padding: 2px 4px;
+    margin: 1px 1px;
+    border-radius: 10px;
+ }
+
+.bold_bg {
+    background-color: darkgrey;
+    color: black;
 }

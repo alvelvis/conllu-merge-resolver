@@ -240,6 +240,10 @@ def count_conflicts(query):
     else:
         objects['sentence_resize'].props.position = 0
     objects['unsolvable_conflicts'].set_text("{} unsolvable conflicts".format(bad_conflicts))
+    if bad_conflicts:
+        objects['unsolvable_conflicts'].get_style_context().add_class("unsolvable")
+    else:
+        objects['unsolvable_conflicts'].get_style_context().remove_class("unsolvable")
     objects['conflicts'].set_text("Total: {} conflicts".format(len(window.conflicts)))
     return
 
@@ -500,9 +504,10 @@ def attach_popup(widget, event):
                     menu_item = Gtk.MenuItem("")
                     menu_item.connect('activate', attach_token)
                     if id == window.token_being_attached:
-                        menu_item.get_children()[0].set_markup(markup_bold("<b>{} {}</b>".format(id, word)))
+                        menu_item.get_style_context().add_class('bold_bg')
                     else:
-                        menu_item.get_children()[0].set_label("{} {}".format(id, word))
+                        menu_item.get_style_context().remove_class('bold_bg')
+                    menu_item.get_children()[0].set_label("{} {}".format(id, word))
                     objects['attachment_menu'].append(menu_item)
                     already_appended.append(id)
         objects['attachment_menu'].show_all()
@@ -627,6 +632,9 @@ def markup_underline(text):
 
 def markup_bold(text):
     return html.escape(text.replace("<b>", "*b*").replace("</b>", "*/b*")).replace("*b*", "<b>").replace("*/b*", "</b>")
+
+def markup_bold_bg(text):
+    return html.escape(text.replace("<boldbg>", "*boldbg*").replace("</boldbg>", "*/boldbg*")).replace("*boldbg*", "<span background='lightgray' color='white'>").replace("*/boldbg*", "</span>")
 
 def token_in_conflict_changed(highlight=True):
     conflict_id = window.token_in_conflict.split("\t")[0]

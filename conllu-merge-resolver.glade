@@ -236,6 +236,7 @@
             <property name="can_focus">False</property>
             <property name="margin_left">10</property>
             <property name="margin_right">10</property>
+            <property name="column_spacing">5</property>
             <property name="column_homogeneous">True</property>
             <child>
               <object class="GtkButton" id="save_conflict">
@@ -246,9 +247,6 @@
                 <property name="receives_default">True</property>
                 <property name="use_underline">True</property>
                 <accelerator key="s" signal="clicked" modifiers="GDK_CONTROL_MASK"/>
-                <style>
-                  <class name="colbutton"/>
-                </style>
               </object>
               <packing>
                 <property name="left_attach">2</property>
@@ -270,7 +268,6 @@
                     <property name="relief">none</property>
                     <style>
                       <class name="notebook-button-active"/>
-                      <class name="colbutton"/>
                     </style>
                   </object>
                   <packing>
@@ -287,9 +284,6 @@
                     <property name="tooltip_text" translatable="yes">Tree visualization for this sentence (Ctrl+T)</property>
                     <property name="relief">none</property>
                     <accelerator key="t" signal="clicked" modifiers="GDK_CONTROL_MASK"/>
-                    <style>
-                      <class name="colbutton"/>
-                    </style>
                   </object>
                   <packing>
                     <property name="left_attach">1</property>
@@ -313,9 +307,6 @@
                 <property name="receives_default">True</property>
                 <property name="relief">none</property>
                 <accelerator key="r" signal="clicked" modifiers="GDK_CONTROL_MASK"/>
-                <style>
-                  <class name="colbutton"/>
-                </style>
               </object>
               <packing>
                 <property name="left_attach">3</property>
@@ -330,9 +321,6 @@
                 <property name="receives_default">True</property>
                 <property name="relief">none</property>
                 <accelerator key="u" signal="clicked" modifiers="GDK_CONTROL_MASK"/>
-                <style>
-                  <class name="colbutton"/>
-                </style>
               </object>
               <packing>
                 <property name="left_attach">0</property>
@@ -352,9 +340,6 @@
                     <property name="receives_default">True</property>
                     <property name="relief">none</property>
                     <accelerator key="Left" signal="clicked" modifiers="GDK_MOD1_MASK"/>
-                    <style>
-                      <class name="colbutton"/>
-                    </style>
                   </object>
                   <packing>
                     <property name="left_attach">0</property>
@@ -369,9 +354,6 @@
                     <property name="receives_default">True</property>
                     <property name="relief">none</property>
                     <accelerator key="Right" signal="clicked" modifiers="GDK_MOD1_MASK"/>
-                    <style>
-                      <class name="colbutton"/>
-                    </style>
                   </object>
                   <packing>
                     <property name="left_attach">1</property>
