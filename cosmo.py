@@ -640,8 +640,8 @@ def token_in_conflict_changed(highlight=True):
     conflict_id = window.token_in_conflict.split("\t")[0]
     text_word_id = window.token_in_conflict.split("\t")[0]
     text_word = window.token_in_conflict.split("\t")[1]
-    text_left = [(y.split("\t")[1] if x != window.token_in_conflict.split("\t")[6] else "<u>{}</u>".format(y.split("\t")[1])) for x, y in window.tokens[window.conflicts_i[window.this_conflict]].items() if not '-' in x and int(x) < int(text_word_id)] if not '-' in text_word_id else ""
-    text_right = [(y.split("\t")[1] if x != window.token_in_conflict.split("\t")[6] else "<u>{}</u>".format(y.split("\t")[1])) for x, y in window.tokens[window.conflicts_i[window.this_conflict]].items() if not '-' in x and int(x) > int(text_word_id)] if not '-' in text_word_id else ""
+    text_left = [(y.split("\t")[1] if x != window.token_in_conflict.split("\t")[6] else "<u>{}</u>".format(y.split("\t")[1])) for x, y in window.tokens[window.conflicts_i[window.this_conflict]].items() if not '-' in x and int(x.split(".")[0]) < int(text_word_id)] if not '-' in text_word_id else ""
+    text_right = [(y.split("\t")[1] if x != window.token_in_conflict.split("\t")[6] else "<u>{}</u>".format(y.split("\t")[1])) for x, y in window.tokens[window.conflicts_i[window.this_conflict]].items() if not '-' in x and int(x.split(".")[0]) > int(text_word_id)] if not '-' in text_word_id else ""
     objects['text_word'].set_label(text_word)
     objects['text_left'].set_markup(markup_underline(" ".join(text_left)))
     objects['text_right'].set_markup(markup_underline(" ".join(text_right)))
