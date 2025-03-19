@@ -2,6 +2,8 @@
 
 Simple GUI to help solve Git conflicts and adjudicate divergent annotation in CoNLL-U files
 
+`sudo apt install python3-gi gobject-introspection gir1.2-gtk-3.0 libgtksourceview-3.0-dev`
+
 `python3 cosmo.py`
 
 ![CoSMo Screenshot](https://github.com/alvelvis/conllu-merge-resolver/blob/main/screen.png?raw=true)
